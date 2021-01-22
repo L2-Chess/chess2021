@@ -10,6 +10,13 @@
 
 ## Listes des choses a faire pour le moment
 
+### C
+
+
+### SDL
+
+
+
 ~~- Se familiariser avec Git~~
 
 -- Se familiariser avec SDL

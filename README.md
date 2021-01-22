@@ -8,7 +8,7 @@ Présentation du Projet:
 	
 --Jeu codé en C et SDL
 
-#Listes des choses a faire pour le moment
+Listes des choses a faire pour le moment
 
 -Se familiariser avec SDL
 -creer un menu pour le jeu d'echec en C

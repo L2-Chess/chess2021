@@ -1,0 +1,13 @@
+
+############## PREMIERS PAS ##############
+> git clone https://github.com/L2-Chess/chess2021.git
+
+> cd chess2021
+
+> Créez un nouveau fichier .txt par exemple dans le dossier et sauvegardez
+
+> git add test1.txt
+
+> git push origin master (si ça marchepas retirez origin master)
+
+> entrez le username et mot de passe du compte 

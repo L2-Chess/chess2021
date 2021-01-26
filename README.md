@@ -9,7 +9,7 @@
 -- Jeu codé en C et SDL
 
 ## Lien du diagramme Prévisionel
-
+https://docs.google.com/spreadsheets/d/10yo3ysf4vidhqoo51AtYCyNwWYATbHt2LOqmFwV2dP4/edit#gid=0
 
 ## Listes des choses a faire pour le moment
 

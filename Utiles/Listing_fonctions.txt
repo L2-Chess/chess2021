@@ -18,6 +18,7 @@ Plateau de jeu & pions :
 	Pions : Structure de donnée pour spécifier le type du pion et sa couleur
 
 	
+
 	Fonctions : 
 		_ initialiser le plateau 
 		_ Déplacer une piece 

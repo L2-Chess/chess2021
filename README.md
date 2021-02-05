@@ -24,7 +24,7 @@ https://docs.google.com/spreadsheets/d/10yo3ysf4vidhqoo51AtYCyNwWYATbHt2LOqmFwV2
 
 -- Se familiariser avec SDL
 
--- creer un menu pour le jeu d'echec en C
+-- Creer un menu pour le jeu d'echec en C
 
 -- Creer le plateau de de jeu et les pions en C(Tableau)
 
@@ -32,7 +32,7 @@ https://docs.google.com/spreadsheets/d/10yo3ysf4vidhqoo51AtYCyNwWYATbHt2LOqmFwV2
 
 -- Design des pieces de Jeu genre avec gimp
 
--- pouvoir jouer tout seul sur le plateau et deplacer les pièces correctement (c'est un début)
+-- Pouvoir jouer tout seul sur le plateau et deplacer les pièces correctement (c'est un début)
 
 -- Pouvoir jouer avec un ami sur la meme machine
 
@@ -40,7 +40,7 @@ https://docs.google.com/spreadsheets/d/10yo3ysf4vidhqoo51AtYCyNwWYATbHt2LOqmFwV2
 
 -- Implementer les differents modes de jeu (avec le temps) (rapide, blitz)
 
--- outils pendant le jeu un peu comme Chess.com ou on peut revoir les actions precedentes et anticiper des coups par example
+-- Outils pendant le jeu un peu comme Chess.com ou on peut revoir les actions precedentes et anticiper des coups par example
 
 
 

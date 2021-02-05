@@ -1,0 +1,48 @@
+L2-INFO 2020/2021 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+############## TUTO GITHUB #################
+
+############## Récupérer le repository du projet ##################
+
+> git clone git@github.com:L2-Chess/chess2021.git
+
+> Positionnez vous dans le répértoire : cd chess2021
+
+
+############## Ajouter de nouveaux fichiers dans le repository #############
+
+> Deplacez vos fichiers dans le répertoire cd chess2021
+
+> git add nom_du_fichier1 nom_du_fichier2 ... ( si plusieurs fichiers ou que vous voulez tout ajouter "git add ." )
+
+> git commit -m "description du commit exemeple : modification du fichier xx.c pour ajout de fonction"
+
+***************** si le commit marche pas tapez cette commande : git config --global user.name "L2-Chess"
+
+> git push
+
+> Entrez votre username et votre mot de passe si on vous le demande
+
+############## Mettre à jour le repository que vous avez sur votre machine ########################
+
+> Placez vous dans le répertoire : cd chess2021// Placez vous dans le repository
+
+> git pull origin main    
+
+Vous aurez maintenant votre repository à jour !
+
+######################### Supprimer un fichier du repository #########################
+
+> git checkout (pour vérifier qu'on est bien dans la bonne branche)
+
+> git rm file1 file 2 .. ( sinon  si vous voulez supprimer  un répertoire : git rm -r folder_name )
+
+> git commit -m "description de la tâche"   //Ça permet de savoir ce qu'on a fait au cours du projet pour ne pas se prerdre dans tout les commits qu'on fait ;) 
+
+> git push ( origin nom_de_la_branche )
+
+#######################################################################################
+
+En cas de problèmes avec git pull pour mettre à jour votre repository lancez la commance suivante :
+
+> git reset --hard HEAD && git checkout master && git pull

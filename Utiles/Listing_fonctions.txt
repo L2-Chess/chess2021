@@ -1,0 +1,49 @@
+Menu en C ( interface graphique SDL ) :
+	Choix : Mode de jeu : echec classique ( 1 joueur vs IA || 1 joueur vs 1 joueur local || si possible jouer en réseau)
+			      echec among us ( optionnel, à imaginer et réaliser à la fin du mode classique)
+
+		Niveau de difficulté
+		
+	 	Succes de progression : ( débloquage de nouveaux skins de plateau et de pions )
+		
+		Système de records et statistiques ( Parties lancées / parties gagnées / Parties perdues / Parties non finies /nb de pions tués / temps passé sur le jeu )
+		
+		Settings ( Changement de langue : Fr, En, It, Ar... || Musique de fond || SFX Sounds || Personnalisation du skin )
+		
+		
+		
+	
+Plateau de jeu & pions : 
+	Matrice (8*8)
+	Pions : Structure de donnée pour spécifier le type du pion et sa couleur
+
+	
+	Fonctions : 
+		_ initialiser le plateau 
+		_ Déplacer une piece 
+		_ Bool : Case valide ( tester si une case est valide pour un déplacement)
+		_ Bool : Case pleine ( tester si une case est pleine )
+		_ attaquer ( tuer une piece )
+		_ enlever_piece (nettoie le plateau )
+		_ deplacement_autorisé ( tester si undeplacment est autorisé : cas du roi en champs de vision d'une pièce adversaire)
+		_ echec ( check si y'a un echec )
+		_ echec_mat ( test si y'a echec et mat)
+		_ Resultat ( Victoire ou défaite || marque la finde la partie )
+		_ prise_en_passant ( move special )
+		_ roque ( move special )
+		_ resurection ( quand un pion touche la derniere ligne à l'opposé, il est changé par une piece morte au choix )
+		_ moteur de jeu ( IA à développer )
+		
+		_ Timer ( calcul de temps disponible pour le tour de jeu )
+		_ log_moves ( enregistrer les coups effectués dans un fichier pour les afficher sur l'interface)
+		_ D'autres fonctions à rajouter si besoin 
+
+		_ Save ( sauvegarde une partie )
+		_ Abandonner ( abandonner la partie )
+		_ Rejouer // Revenir au menu 
+	SDL :
+		_ affichage des images ( plateau et pièces ) 
+		_ les effets de sons (musique de fond / SFX )
+		_ Les boutons & évènements 
+		
+		

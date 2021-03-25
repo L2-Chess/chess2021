@@ -22,13 +22,13 @@ https://docs.google.com/spreadsheets/d/10yo3ysf4vidhqoo51AtYCyNwWYATbHt2LOqmFwV2
 
 ~~- Se familiariser avec Git~~
 
--- Se familiariser avec SDL
+~~-- Se familiariser avec SDL~~
 
--- Creer un menu pour le jeu d'echec en C
+~~-- Creer un menu pour le jeu d'echec en C~~
 
--- Creer le plateau de de jeu et les pions en C(Tableau)
+~~-- Creer le plateau de de jeu et les pions en C(Tableau)~~
 
--- Faire focntionner le SDL (?)
+~~-- Faire focntionner le SDL (?)~~
 
 -- Design des pieces de Jeu genre avec gimp
 

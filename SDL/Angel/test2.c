@@ -16,6 +16,7 @@ int IsInSquare4 = 0;
 int mouse_left;
 int Action1 = 0;
 int GrabMode = 0;
+int PieceDrop = 0;
 //int Action2 = 0;
 //int Action3 = 0;
 //int Action4 = 0;
@@ -34,7 +35,13 @@ int main(int argc, char* argv[])
     SDL_Surface* pSurface = NULL;
     SDL_Texture* pTexture = NULL;
 
-    if (SDL_CreateWindowAndRenderer(800, 600, SDL_WINDOW_SHOWN, &pWindow, &pRenderer) < 0)
+    //SDL_Texture* pTexture1 = NULL;
+
+    
+
+    
+
+    if (SDL_CreateWindowAndRenderer(1280, 720, SDL_WINDOW_SHOWN, &pWindow, &pRenderer) < 0)
     {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "[DEBUG] > %s", SDL_GetError());
         SDL_Quit();
@@ -42,11 +49,22 @@ int main(int argc, char* argv[])
     }
 
 
+    pSurface = IMG_Load("./echec_background.jpg");
+    pTexture = SDL_CreateTextureFromSurface(pRenderer, pSurface);
     
 
-    pTexture = SDL_CreateTextureFromSurface(pRenderer, pSurface);
-    SDL_FreeSurface(pSurface);
 
+
+    /*SDL_Surface* image1 = IMG_Load("./pion_blanc.jpg");
+    pTexture1 = SDL_CreateTextureFromSurface(pRenderer, image1);
+    
+
+    //IMAGE1
+    SDL_Rect image1_pos;
+    image1_pos.x = 0;
+    image1_pos.y = 0;
+    image1_pos.w = 50;
+    image1_pos.h = 50;*/
    
 
     SDL_Event events;
@@ -60,6 +78,9 @@ int main(int argc, char* argv[])
     square.h = 50;
 
     
+
+    
+
 
 
     while (isOpen)
@@ -78,42 +99,54 @@ int main(int argc, char* argv[])
                 //rectangle premier
                 if ((mouse_x > square.x && mouse_x < square.x + square.w) && (mouse_y > square.y && mouse_y < square.y + square.h)) {
                     IsInSquare = 1;
-                    SDL_Log("GRABBBBBBBB");
                 }
                 else {
                     IsInSquare = 0;
                 }
                 
-                if (IsInSquare == 1) {
-                    SDL_Log("GRABBBBBBBB");
-                    square.x = mouse_x - (square.w / 2);
-                    square.y = mouse_y - (square.h / 2);
-                }
 
-               /* if (GrabMode == 1) {
-                    square.x = mouse_x - (square.w / 2);
-                    square.y = mouse_y - (square.h / 2);
-                }*/
+                SDL_Log("Mouse x = %i , Mouse y = %i , IIS1 = %i , GRAB = %i , PIECE_DROP = %i", mouse_x, mouse_y, IsInSquare, GrabMode, PieceDrop);
 
-                SDL_Log("Mouse x = %i , Mouse y = %i , IIS1 = %i , GRAB = %i ", mouse_x, mouse_y, IsInSquare, GrabMode);
-                break;
 
                 
 
-            case SDL_MOUSEBUTTONDOWN:
+                break;
 
+
+
+            case SDL_MOUSEBUTTONDOWN:
+                PieceDrop == 0;
+                GrabMode == 0;
                 //drag and drop
 
 
-                if (SDL_BUTTON(SDL_BUTTON_LEFT) && IsInSquare == 0) {
+               if (SDL_BUTTON_LEFT && IsInSquare == 0) {
                     mouse_left = 1;
-                    SDL_Log("LE BOUTON GAUCHE EST CLIQUE");
-                }else {
-                    mouse_left = 0;
-                }
-
+                    SDL_Log("LE BOUTON GAUCHE EST CLIQUE");            
+               }
+               else if (SDL_BUTTON_LEFT && IsInSquare == 1) {
+                   SDL_Log("GRAB");
+                   if (GrabMode == 0) {
+                       GrabMode = 1;
+                   }
+                   
+               }
                 
-                break;
+               
+               break;
+                
+            case SDL_MOUSEBUTTONUP:
+
+               
+                
+
+               if (GrabMode == 1) {
+                    square.x = mouse_x - (square.w / 2);
+                    square.y = mouse_y - (square.h / 2);
+               }
+
+               GrabMode = 0;
+               break;
 
 
                 /*case SDL_MOUSEWHEEL:
@@ -125,12 +158,11 @@ int main(int argc, char* argv[])
                     else if (events.wheel.y < 0) // scroll down
                     {
                         square.x = square.x + 4;
-                    }
-                    break;*/
+                    }*/
+                    
             }
         }
 
-        
         //FOND
         SDL_SetRenderDrawColor(pRenderer, 0, 0, 0, 255);
         SDL_RenderClear(pRenderer);
@@ -144,25 +176,26 @@ int main(int argc, char* argv[])
             SDL_RenderClear(pRenderer);
         }
 
+        //RENDER IMAGE BACKGROUND
+        SDL_RenderCopy(pRenderer, pTexture, NULL, NULL);
+
+        //IMAGE DRAW
+        // SDL_RenderCopy(pRenderer, pTexture1, NULL, NULL);
+
         //POINT
         //SDL_SetRenderDrawColor(pRenderer, 0, 0, 0, 255);
         //SDL_RenderDrawPoint(pRenderer, 200, 200);
 
         
 
-        //rectangle couleur
+        //RECTANGLE TEST
         SDL_SetRenderDrawColor(pRenderer, 0, 255, 0, 0);
-
-
-        
-        //render rectangle
         SDL_RenderFillRect(pRenderer, &square);
-
-        
 
         SDL_RenderPresent(pRenderer);
 
-
+        
+        
 
 
         SDL_Delay(20);
@@ -171,6 +204,8 @@ int main(int argc, char* argv[])
 
     SDL_DestroyRenderer(pRenderer);
     SDL_DestroyWindow(pWindow);
+    //SDL_FreeSurface(image1);
+    SDL_FreeSurface(pSurface);
     SDL_Quit();
 
     return EXIT_SUCCESS;

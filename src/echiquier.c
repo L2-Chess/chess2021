@@ -9,9 +9,14 @@
 #define TAILLE 120
 #define LIMITE 64
 
+//variable de sauvegarde
+char nom_save [20];
+char date_save [20];
+char savefile [100];
 //à qui le tour : 0 = Blanc, 1 = Noir
 int role = 0;
 
+int c_menu =0;
 //Plateau du jeu
 Piece echiquier [LIMITE];
 
@@ -22,7 +27,7 @@ Piece test_echiquier [LIMITE];
 Piece mirror [LIMITE];
 
 //positions demandées à l'utilisateur
-char case_dep [10], case_arr [10];
+char case_dep [10], case_arr [10], choix[10];
 int indice_dep = 0;
 int indice_arr = 0;
 
@@ -57,6 +62,7 @@ int mailbox [] = {
   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
 };
 
+
   // tableau de LIMITE element pour récupérer l'indice d'une case demandée et vérifier si elle sort de l'echiquier sur le tableau précédent
   // les valeurs contenues dans ce tableau correspondent aux indices des cases 0 à LIMITE sur le tableau de 120 element
   int tabLIMITE []= {
@@ -81,6 +87,11 @@ int mailbox [] = {
   "a2","b2","c2","d2","e2","f2","g2","h2",
   "a1","b1","c1","d1","e1","f1","g1","h1"};
 
+//Tablaux des positions des pieces
+int pos_fous [2];
+int pos_tours [2];
+int pos_cavaliers [2];
+int pos_pions [8];
 
 //Initialisation du plateau
 void init_plateau(Piece plateau []){
@@ -139,6 +150,26 @@ void init_plateau(Piece plateau []){
   plateau [4] = n_roi;
   plateau [60] = b_roi;
 
+}
+
+void banner(char filename [50]){
+  FILE *fptr;
+  char c;
+  fptr = fopen(filename, "r");
+    if (fptr == NULL)
+    {
+        wprintf(L"Cannot open file \n");
+        exit(0);
+    }
+  c = fgetc(fptr);
+    while (c != EOF)
+    {
+        wprintf (L"%c", c);
+        c = fgetc(fptr);
+    }
+
+    fclose(fptr);
+  wprintf(L"\n");
 }
 
 //Dessiner une piece
@@ -824,6 +855,8 @@ int get_pos_roi(){
 //Savoir si une case est menacée
 bool is_attacked(int case_arrive, int couleur, Piece plateau []){
   int cpt =1;
+  int testing_cavalier [LIMITE];
+  init_array(testing_cavalier,LIMITE);
   switch (couleur){
     case 0 :
       //on vérifie la ligne droite
@@ -950,14 +983,15 @@ bool is_attacked(int case_arrive, int couleur, Piece plateau []){
       //On parcour l'plateau  case par case, quand on tombe sur un cavalier on génère ses moves possibles dans le tableau
       //quand on a les deplacements possibles des deux cavaliers adverses, on vérifie si la case d'arrivée qu'on a choisis correspond à une des cases possibles pour un cavaliers
       //si c'est le cas on ajout cette case au tableau attacked pour dire que cette case est menacée
+
       for(int i=0; i<LIMITE; i++){
         if(cpt==2)break;
         if (plateau [i].n==4 && plateau [i].c==1){
-          get_moves_cavalier(i,1,possible_moves);
+          get_moves_cavalier(i,1,testing_cavalier);
           cpt++;
         }
       }
-      if(is_in_array(possible_moves,case_arrive)) return true;
+      if(is_in_array(testing_cavalier,case_arrive)) return true;
 
       break;
 
@@ -1080,14 +1114,15 @@ bool is_attacked(int case_arrive, int couleur, Piece plateau []){
         cpt+=9;
       }
       //cases menacées par des cavaliers
+
       for(int i=0; i<LIMITE; i++){
         if(cpt==2)break;
         if (plateau [i].n==4 && plateau [i].c==0){
-          get_moves_cavalier(i,0,possible_moves);
+          get_moves_cavalier(i,0,testing_cavalier);
           cpt++;
         }
       }
-      if(is_in_array(possible_moves,case_arrive)) return true;
+      if(is_in_array(testing_cavalier,case_arrive)) return true;
       break;
   }
   return false;
@@ -1100,6 +1135,7 @@ bool move_piece(int dep, int arr, Piece plateau[]){
     // donc la case donnée est invalide, on affiche le message d'erreur et on quitte la boucle
     if(possible_moves[i]==-2){
       system("clear");
+      banner("../Utiles/banner.txt");
       wprintf(L"Déplacement impossible ! Entrez une case valide !\n\n");
       break;
     }
@@ -1120,6 +1156,7 @@ bool gerer_tour(int role, int piece){
     if(echiquier[piece].c==0) return true;
     else {
       system("clear");
+      banner("../Utiles/banner.txt");
       wprintf(L"C'est aux blancs de jouer !\n");
       return false;
     }
@@ -1128,18 +1165,56 @@ bool gerer_tour(int role, int piece){
     if(echiquier[piece].c==1) return true;
     else {
       system("clear");
+      banner("../Utiles/banner.txt");
       wprintf(L"C'est aux noirs de jouer !\n");
       return false;
     }
   }
 }
 
+void save_game(char date [20], char nom[20]){
+  FILE *fp;
+  strcpy(savefile, "Sauvegarde_le_");
+  strcat(savefile, date);
+  strcat(savefile, nom);
+  strcat(savefile, ".txt");
+  fp= fopen(savefile,"w");
+  fprintf(fp,"%i\n",role);
+  for(int i=0; i<LIMITE; i++){
+    fprintf(fp,"%i %i %i\n",i,echiquier[i].n,echiquier[i].c);
+  }
+  fclose(fp);
+}
+
+void load_game(char partie [100]){
+/*  FILE *fp;
+  savefile=partie;
+  fp= fopen(savefile,"r");
+  fscaf(fp,)*/
+}
+
 //récupérer les indices à partir des cases fournies par l'utilisateur
 void get_indices (){
-  wprintf(L"\n\nEntrez la case de la piece a bouger : ");
+  wprintf(L"\n\n Instruction 1 -> ");
   scanf("%s",case_dep);
-  wprintf(L"\nEntrez la case d'arrivee : ");
+
+  if(strcmp(case_dep,"exit")==0) exit(0);
+  if(strcmp(case_dep,"save")==0){
+    wprintf(L"\n\n Vous avez choisis de sauvegarder et quitter la partie ! ");
+    wprintf(L"\n\n Entrez votre nom (Ex: Martin) -> ");
+    scanf("%s",nom_save);
+    wprintf(L"\n\n Entrez la date du jour (Ex: 25-03-2021) ->");
+    scanf("%s",date_save);
+
+    save_game(date_save,nom_save);
+    wprintf(L"\n\n Votre partie a bien été enregistrée ! A la prochaine !");
+
+    exit(0);
+  }
+  wprintf(L"\nInstruction 2 ->  ");
   scanf("%s",case_arr);
+
+  //if(strcmp(case_dep,"save")==0)save_game();
   for(int i=0; i<LIMITE; i++){
     if(strcmp(case_dep, coord[i])==0){
       indice_dep = i;
@@ -1199,12 +1274,20 @@ bool deplacement_piece(int indice_dep, int indice_arr){
         if(!is_attacked(indice_arr,0,echiquier)){
           init_array(possible_moves,TAILLE);
           get_moves_roi(indice_dep,echiquier[indice_dep].c,possible_moves);
-          if(move_piece(indice_dep,indice_arr,echiquier)) return true;
+          if(move_piece(indice_dep,indice_arr,echiquier)){
+            wprintf(L"moves du roi  : ");
+            for(int k=0; k< TAILLE; k++){
+              if(possible_moves[k] == -2) break;
+              wprintf(L"%i, ",possible_moves[k]);
+            }
+           return true;
+          }
           else return false;
 
         }
         else {
           system("clear");
+          banner("../Utiles/banner.txt");
           wprintf(L"Cette case est menacée! déplacement impossible !\n\n");
           return false;
         }
@@ -1212,11 +1295,19 @@ bool deplacement_piece(int indice_dep, int indice_arr){
       else{
         if(!is_attacked(indice_arr,1,echiquier)){
           get_moves_roi(indice_dep,echiquier[indice_dep].c,possible_moves);
-          if(move_piece(indice_dep,indice_arr,echiquier)) return true;
+          if(move_piece(indice_dep,indice_arr,echiquier)){
+            wprintf(L"moves de la dame : ");
+            for(int k=0; k< TAILLE; k++){
+              if(possible_moves[k] == -2) break;
+              wprintf(L"%i, ",possible_moves[k]);
+            }
+           return true;
+          }
           else return false;
         }
         else{
           system("clear");
+          banner("../Utiles/banner.txt");
           wprintf(L"Cette case est menacée! déplacement impossible !\n\n");
           return false;
         }
@@ -1226,12 +1317,20 @@ bool deplacement_piece(int indice_dep, int indice_arr){
     case 1 :
       get_moves_dame(indice_dep,echiquier[indice_dep].c,possible_moves);
       if(test_echec_after_move(indice_dep,indice_arr)) {
+        system("clear");
+        banner("../Utiles/banner.txt");
+        wprintf(L"Le roi est en echec, ce deplacement est impossible !\n\n");
         cpy_plateau(echiquier,test_echiquier);
         return false;
       }
       else{
         if(move_piece(indice_dep,indice_arr,echiquier)){
           cpy_plateau(echiquier,test_echiquier);
+          wprintf(L"moves de la dame : ");
+          for(int k=0; k< TAILLE; k++){
+            if(possible_moves[k] == -2) break;
+            wprintf(L"%i, ",possible_moves[k]);
+          }
           return true;
         }
         else return false;
@@ -1240,25 +1339,42 @@ bool deplacement_piece(int indice_dep, int indice_arr){
     case 2 :
       get_moves_tour(indice_dep,echiquier[indice_dep].c,possible_moves);
       if(test_echec_after_move(indice_dep,indice_arr)) {
+        system("clear");
+        banner("../Utiles/banner.txt");
+        wprintf(L"Le roi est en echec, ce deplacement est impossible !\n\n");
         cpy_plateau(echiquier,test_echiquier);
         return false;
       }
       else{
         if(move_piece(indice_dep,indice_arr,echiquier)){
           cpy_plateau(echiquier,test_echiquier);
+          for(int k=0; k< TAILLE; k++){
+            if(possible_moves[k] == -2) break;
+            wprintf(L"%i, ",possible_moves[k]);
+          }
           return true;
         }
         else return false;
       }
       break;
     case 3 :
+      init_array(possible_moves,TAILLE);
       get_moves_fou(indice_dep,echiquier[indice_dep].c,possible_moves);
+
       if(test_echec_after_move(indice_dep,indice_arr)) {
+        system("clear");
+        banner("../Utiles/banner.txt");
+        wprintf(L"Le roi est en echec, ce deplacement est impossible !\n\n");
         cpy_plateau(echiquier,test_echiquier);
         return false;
       }
       else{
         if(move_piece(indice_dep,indice_arr,echiquier)){
+          wprintf(L"moves possibles du fou : ");
+          for(int k=0; k< TAILLE; k++){
+            if(possible_moves[k] == -2) break;
+            wprintf(L"%i, ",possible_moves[k]);
+          }
           cpy_plateau(echiquier,test_echiquier);
           return true;
         }
@@ -1268,12 +1384,20 @@ bool deplacement_piece(int indice_dep, int indice_arr){
     case 4 :
       get_moves_cavalier(indice_dep,echiquier[indice_dep].c,possible_moves);
       if(test_echec_after_move(indice_dep,indice_arr)) {
+        system("clear");
+        banner("../Utiles/banner.txt");
+        wprintf(L"Le roi est en echec, ce deplacement est impossible !\n\n");
         cpy_plateau(echiquier,test_echiquier);
         return false;
       }
       else{
         if(move_piece(indice_dep,indice_arr,echiquier)){
           cpy_plateau(echiquier,test_echiquier);
+          wprintf(L"\nmoves possibles du cavalier : ");
+          for(int k=0; k< TAILLE; k++){
+            if(possible_moves[k] == -2) break;
+            wprintf(L"%i, ",possible_moves[k]);
+          }
           return true;
         }
         else return false;
@@ -1284,12 +1408,17 @@ bool deplacement_piece(int indice_dep, int indice_arr){
       if(test_echec_after_move(indice_dep,indice_arr)) {
         cpy_plateau(echiquier,test_echiquier);
         system("clear");
+        banner("../Utiles/banner.txt");
         wprintf(L"Le roi est en echec, ce deplacement est impossible !\n\n");
         return false;
       }
       else{
         if(move_piece(indice_dep,indice_arr,echiquier)){
           cpy_plateau(echiquier,test_echiquier);
+          for(int k=0; k< TAILLE; k++){
+            if(possible_moves[k] == -2) break;
+            wprintf(L"%i, ",possible_moves[k]);
+          }
           return true;
         }
         else return false;
@@ -1298,9 +1427,91 @@ bool deplacement_piece(int indice_dep, int indice_arr){
   }
 }
 
+//Récupérer la pos d'une dame
+int get_pos_dame(){
+  if (role==0){
+    for (int i=0; i<LIMITE; i++){
+      if (echiquier[i].n==1 && echiquier[i].c==0) return i;
+    }
+    return -2;
+  }
+  else{
+    for (int i=0; i<LIMITE; i++){
+      if (echiquier[i].n==1 && echiquier[i].c==1) return i;
+    }
+    return -2;
+  }
+}
+
+//Récupérer la pos des tours
+void get_pos_tours(){
+  if (role==0){
+    init_array(pos_tours,2);
+    for (int i=0; i<LIMITE; i++){
+      if (echiquier[i].n==2 && echiquier[i].c==0) insert_element(pos_tours,i);
+    }
+  }
+  else{
+    init_array(pos_tours,2);
+    for (int i=0; i<LIMITE; i++){
+      if (echiquier[i].n==2 && echiquier[i].c==1) insert_element(pos_tours,i);
+    }
+  }
+}
+
+//Récupérer la pos des fous
+void get_pos_fous(){
+  if (role==0){
+    init_array(pos_fous,2);
+    for (int i=0; i<LIMITE; i++){
+      if (echiquier[i].n==3 && echiquier[i].c==0) insert_element(pos_fous,i);
+    }
+  }
+  else{
+    init_array(pos_fous,2);
+    for (int i=0; i<LIMITE; i++){
+      if (echiquier[i].n==3 && echiquier[i].c==1) insert_element(pos_fous,i);
+    }
+  }
+}
+
+//Récupérer la pos des fous
+void get_pos_cavalier(){
+  if (role==0){
+    init_array(pos_cavaliers,2);
+    for (int i=0; i<LIMITE; i++){
+      if (echiquier[i].n==4 && echiquier[i].c==0) insert_element(pos_cavaliers,i);
+    }
+  }
+  else{
+    init_array(pos_cavaliers,2);
+    for (int i=0; i<LIMITE; i++){
+      if (echiquier[i].n==4 && echiquier[i].c==1) insert_element(pos_cavaliers,i);
+    }
+  }
+}
+
+//Récupérer la pos des pions
+void get_pos_pions(){
+  if (role==0){
+    init_array(pos_pions,8);
+    for (int i=0; i<LIMITE; i++){
+      if (echiquier[i].n==5 && echiquier[i].c==0) insert_element(pos_pions,i);
+    }
+  }
+  else{
+    init_array(pos_pions,8);
+    for (int i=0; i<LIMITE; i++){
+      if (echiquier[i].n==5 && echiquier[i].c==1) insert_element(pos_pions,i);
+    }
+  }
+}
+
+
 //echec et mat : fin du jeu
 bool game_over (){
   int pos=0;
+  bool can_save = false;
   //on detecte si on est en echec en premier lieu
   if(detect_echec(echiquier)){
     //on initialise le tableau sur lequel on va faire nos test
@@ -1310,42 +1521,94 @@ bool game_over (){
     //On verifie si une des cases possibles n'est pas attaquée, si on en troouve une alors le roi peut esquiver l'echec
     for(int i=0; i<LIMITE ; i++){
       if(deplacement_echec[i]==-2)break;
-      if(!is_attacked(deplacement_echec[i],role, echiquier)){
-        return false;
-      }
+      if(!is_attacked(deplacement_echec[i],role, echiquier)) return false;
     }
-    //si on sort de la boucle c'est que le roi ne peut pas esquiver l'echec alors on teste tous les deplacements des pieces alliées
-    //si y'en a une qui peut sortir le roi de la menace alors on peut esquiver l'echec et la partie continue
-
-    //on vérifie si la dame peut sauver l'echec
-    for (int i=0; i<LIMITE; i++){
-      if (echiquier[i].n==1 && echiquier[i].c==role){
-        pos=i;
-        init_array(deplacement_echec,LIMITE);
-        get_moves_dame(pos,role,deplacement_echec);
-        break;
+    
+    //on cherche les pieces du joueur actuel
+  /*  for(int i=0; i<LIMITE; i++){
+      if (can_save) break;
+      if(echiquier[i].c==role){
+        switch(echiquier[i].n){
+          case 0 :
+            break;
+          case 1 :
+            pos =i;
+            init_array(deplacement_echec,LIMITE);
+            get_moves_dame(pos,role,deplacement_echec);
+            for(int j=0; j<LIMITE;j++){
+             if (deplacement_echec[j]==-2) break;
+             if(!test_echec_after_move(pos,deplacement_echec[j])){
+               cpy_plateau(echiquier,test_echiquier);
+               return false;
+             }
+            }
+            break;
+          case 2 :
+           pos = i;
+           init_array(deplacement_echec,LIMITE);
+           get_moves_tour(pos,role,deplacement_echec);
+           for(int j=0; j<LIMITE; j++){
+             if (deplacement_echec[j]==-2) break;
+             if(!test_echec_after_move(pos,deplacement_echec[j])){
+               cpy_plateau(echiquier,test_echiquier);
+               return false;
+             }
+           }
+           break;
+           /**
+          case 3 :
+            pos = i;
+            init_array(deplacement_echec,LIMITE);
+            get_moves_fou(pos,role,deplacement_echec);
+            for(int j=0; j<LIMITE; j++){
+              if (deplacement_echec[j]==-2) break;
+              if(!test_echec_after_move(pos,deplacement_echec[j])){
+                cpy_plateau(echiquier,test_echiquier);
+                return false;
+              }
+            }
+            break;
+          case 4 :
+            pos = i;
+            init_array(deplacement_echec,LIMITE);
+            get_moves_cavalier(pos,role,deplacement_echec);
+            for(int j=0; j<LIMITE; j++){
+              if (deplacement_echec[j]==-2) break;
+              if(!test_echec_after_move(pos,deplacement_echec[j])){
+                cpy_plateau(echiquier,test_echiquier);
+                return false;
+              }
+            }
+            break;
+        /*  case 5 :
+            pos = i;
+            init_array(deplacement_echec,LIMITE);
+            get_moves_pion(pos,role,deplacement_echec);
+            for(int j=0; j<LIMITE; j++){
+              if (deplacement_echec[j]==-2) break;
+              if(!test_echec_after_move(pos,deplacement_echec[j])){
+                cpy_plateau(echiquier,test_echiquier);
+                return false;
+              }
+            }
+            break;
+        }
       }
-    }
-    for(int i=0; i<LIMITE;i++){
-      if (deplacement_echec[i]==-2) break;
-      if(!test_echec_after_move(pos,deplacement_echec[i])){
-        cpy_plateau(echiquier,test_echiquier);
-        return false;
-      }
-    }
-
-
+    }*/
     //si on arrive à ce stade c'est que rien ne peut esquiver l'echec et donc c'est un echec et mat
     return true;
   }
   else return false;
 }
+
 //débuter un jeu
 void start_game(){
   system("clear");
   init_plateau(echiquier);
   init_plateau(test_echiquier);
   while(true){
+    if(game_over()) break;
+    banner("../Utiles/banner.txt");
     afficher();
     get_indices();
 
@@ -1364,8 +1627,48 @@ void start_game(){
 
 }
 
+void menu (){
+  system("clear");
+  banner("../Utiles/banner2.txt");
+  char menu_option;
+  do{
+    wprintf(L"\n\n\n");
+    wprintf(L"Menu du jeu : \n\n");
+    wprintf(L"a. Commencer une nouvelle partie.\n");
+    wprintf(L"b. Charger une partie.\n");
+    wprintf(L"c. Afficher les parties sauvegardées .\n");
+    wprintf(L"d. Quitter.\n\n");
+    wprintf(L"Entrez votre choix : ");
+    scanf("%c",&menu_option);
+
+    switch(menu_option){
+
+    case 'a':
+        start_game();
+        break;
+    case 'b':
+        //charger_partie();
+        break;
+    case'c':
+        //show_saved_games();
+        break;
+    case'd':
+        break;
+
+    default:
+        wprintf(L"invalid input");
+        break;
+    }
+
+  }
+  while(menu_option !='d');
+
+}
+
 //Menu du jeu
 int main (){
-  start_game();
-  return 0;
+setlocale(LC_CTYPE, "");
+menu();
+
+return 0;
 }

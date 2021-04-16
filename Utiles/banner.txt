@@ -1,0 +1,12 @@
+               _________  .__                                                             Instruction de jeu : 
+               \_   ___ \ |  |__    ____    ______  ______                                    -> Entrez le nom de la case à bouger 
+       ______  /    \  \/ |  |  \ _/ __ \  /  ___/ /  ___/   ______                           -> Entrez le nom de la case d'arrivée
+      /_____/  \     \____|   Y  \\  ___/  \___ \  \___ \   /_____/                            exemple : bouger la dame blanche une case devant -> d1
+                \______  /|___|  / \___  >/____  >/____  >                                                                                      -> d2 
+                       \/      \/      \/      \/      \/                                 Sauvegarde d'une partie : 
+      ___      .____     ________           .___           _____            ___               -> Pour sauvegarder la partie courante entrez : save
+     / _ \_/\  |    |    \_____  \          |   |  ____  _/ ____\  ____    / _ \_/\           -> Entrez votre nom et la date du jour sous le format jour-mois-année
+     \/ \___/  |    |     /  ____/   ______ |   | /    \ \   __\  /  _ \   \/ \___/ 
+               |    |___ /       \  /_____/ |   ||   |  \ |  |   (  <_> )                 Quitter la partie sans sauvegarder // revenir au menu  : 
+               |_______ \\_______ \         |___||___|  / |__|    \____/                      -> Entrez : exit
+                       \/        \/                   \/                            

@@ -1,0 +1,5 @@
+Les diviseurs de 10 sont : 
+1
+2
+5
+10

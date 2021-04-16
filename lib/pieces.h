@@ -12,7 +12,7 @@ typedef struct {names n; color c; int v;} Piece;
 
 void to_String(Piece p);
 //unicode pieces blanches
-wchar_t roi_bl = 0x2654;
+wchar_t roi_bl = 0x2654;  
 wchar_t dame_bl = 0x2655;
 wchar_t tour_bl = 0x2656;
 wchar_t fou_bl = 0x2657;

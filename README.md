@@ -38,6 +38,4 @@ https://docs.google.com/spreadsheets/d/10yo3ysf4vidhqoo51AtYCyNwWYATbHt2LOqmFwV2
 
 -- Pouvoir jouer avec L'IA
 
--- Implementer les differents modes de jeu (avec le temps) (rapide, blitz)
-
 -- Outils pendant le jeu un peu comme Chess.com ou on peut revoir les actions precedentes et anticiper des coups par example

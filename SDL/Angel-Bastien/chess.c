@@ -1,3 +1,19 @@
+/**
+ * \file chess.c
+ * \brief Programme du jeu SDL.
+ * \author Angel/Bastien
+ * \version 1.00
+ * \date 19.04.21
+ *
+ * Programme en SDL d'échecs
+ *
+ */
+
+
+
+
+
+
 // Inclure la bibliothèque SDL
 #include <SDL.h>
 #include <SDL_image.h>

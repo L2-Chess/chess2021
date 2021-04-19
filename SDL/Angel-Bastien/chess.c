@@ -5,7 +5,7 @@
  * \version 1.00
  * \date 19.04.21
  *
- * Programme en SDL d'échecs
+ * Programme en SDL d'ï¿½checs
  *
  */
 
@@ -14,12 +14,12 @@
 
 
 
-// Inclure la bibliothèque SDL
+// Inclure la bibliothï¿½que SDL
 #include <SDL.h>
 #include <SDL_image.h>
 
 
-// Inclusion des bibliothèque standard C
+// Inclusion des bibliothï¿½que standard C
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -48,6 +48,106 @@ int IsInSquare = 0;
 
 char CASE[2];
 
+/* SDL_Window* pWindow=NULL;
+SDL_Renderer* pRenderer= NULL;
+
+void afficher_message(int message,int afficher)
+{
+  SDL_Color color= { 15, 5, 107 };
+  SDL_Color color1= { 249, 234, 195 };
+  SDL_Rect position= { 300,300, 300,300};
+  int ok=0,taille_police=100, hauteur_max_texte=45, largeur_max_texte=350;
+  char *texte;
+
+  SDL_Texture *texture;
+  SDL_Surface *texte_sdl;
+    SDL_Surface *texteS;
+  SDL_Rect position_texte;
+  TTF_Font *police;
+  SDL_Color couleur;
+
+  couleur.r=255;//couleur : blanc
+  couleur.g=255;
+  couleur.b=255;
+
+  position_texte.x=940;
+  position_texte.y=550;
+
+  TTF_Init();
+  switch(message) {
+    case 0: texte=malloc(sizeof(char)*strlen("Cliquez pour demarrer la partie"));
+    strcpy(texte,"Cliquez pour demarrer la partie"); break;
+    case 1:  texte=malloc(sizeof(char)*strlen("Roi noir en Ã©chec")); strcpy(texte,"Roi noir en Ã©chec"); break;
+    case 2:
+    case 3:
+    case 4:
+    case 5:
+    case 6:
+    case 7:
+    case 8:
+    default: break;
+  }
+  /*
+  else if(message==2)  {
+  strcpy(texte,"Roi blanc en Ã©chec");
+}
+  else if(message==3)  strcpy(texte,"Pat");
+  else if(message==4)  strcpy(texte,"Roi noir en Ã©chec et mat !");
+  else if(message==5)  strcpy(texte,"Roi blanc en Ã©chec et mat !");
+  else if(message==6)  strcpy(texte,"Le joueur blanc gagne");
+  else if(message==7)  strcpy(texte,"Le joueur noir gagne");
+  else if(message==8)  strcpy(texte,"En quoi le pion doit il etre promu?");
+
+
+  if(message==0) position_texte.x-=10;
+  else if(message==1 || message==2) position_texte.x-=5;
+  else if(message==3)  position_texte.x+=60;
+  else if(message==6 || message==7)
+  {
+    position_texte.x-=7;
+    position_texte.y+=50;
+  }
+  else if(message==8)
+  {
+    largeur_max_texte=360;
+    hauteur_max_texte=46;
+
+    position_texte.x-=5;
+    position_texte.y-=380;
+  }
+
+
+  if(afficher)
+  {
+    while(!ok && taille_police>2)
+    {
+      police = TTF_OpenFont("arial.ttf",taille_police);
+      texte_sdl = TTF_RenderText_Blended(police,texte,color1);
+
+      taille_police--;
+      if(texte_sdl->w<largeur_max_texte && texte_sdl->h<hauteur_max_texte) ok=1;
+    }
+
+    position.x = WIDTHSCREEN  - position.w ;
+    position.y = HEIGHTSCREEN  - position.h ;
+    position.w=text_sdl->w;
+    position.h=text_sdl->h;
+
+      SDL_BlitSurface(texte_sdl,NULL,texteS,&position);
+      texture=SDL_CreateTextureFromSurface(pRenderer,texteS);
+      SDL_RenderCopy(pRenderer, texture, NULL, &position_texte);
+
+      SDL_FreeSurface(texte_sdl);
+
+      SDL_RenderPresent(pRenderer);
+      SDL_SaveBMP(texte_sdl, "somefile.bmp");
+      free(texte);
+      SDL_DestroyTexture(texture);
+  }
+
+
+}
+*/
 
 
 int main(int argc, char* argv[])
@@ -65,9 +165,9 @@ int main(int argc, char* argv[])
 
     SDL_Texture* tab[12];
 
-    
 
-    
+
+
 
     if (SDL_CreateWindowAndRenderer(1280, 960, SDL_WINDOW_SHOWN, &pWindow, &pRenderer) < 0)
     {
@@ -79,7 +179,7 @@ int main(int argc, char* argv[])
 
     pSurface = IMG_Load("./echequier.jpg");
     pTexture = SDL_CreateTextureFromSurface(pRenderer, pSurface);
-    
+
 
 
     SDL_SetWindowTitle(pWindow, "Jeu d'echecs - projet");
@@ -127,11 +227,11 @@ int main(int argc, char* argv[])
     SDL_FreeSurface(fou_n);
     SDL_FreeSurface(roi_n);
     SDL_FreeSurface(reine_n);
-    
+
 
     /*SDL_Surface* image1 = IMG_Load("./pion_blanc.jpg");
     pTexture1 = SDL_CreateTextureFromSurface(pRenderer, image1);
-    
+
 
     //IMAGE1
     SDL_Rect image1_pos;
@@ -139,12 +239,12 @@ int main(int argc, char* argv[])
     image1_pos.y = 0;
     image1_pos.w = 50;
     image1_pos.h = 50;*/
-   
+
 
     SDL_Event events;
     float isOpen = 1;
 
-    
+
 
     // TOUTES LES CASES
     //////////////////////////////////////////////////////
@@ -154,7 +254,7 @@ int main(int argc, char* argv[])
     a1.y = 750;
     a1.w = 100;
     a1.h = 100;
-    
+
     //B1
     SDL_Rect b1;
     b1.x = 150;
@@ -287,7 +387,7 @@ int main(int argc, char* argv[])
     d3.y = 550;
     d3.w = 100;
     d3.h = 100;
-  
+
     //E2
     SDL_Rect e3;
     e3.x = 450;
@@ -632,7 +732,7 @@ int main(int argc, char* argv[])
     p_noir.y = a7.y + (a7.h / RECAD);
     p_noir.w = 80;
     p_noir.h = 80;*/
-    
+
 
     while (isOpen)
     {
@@ -923,8 +1023,8 @@ int main(int argc, char* argv[])
                     CASE[0] = 'R';
                     CASE[1] = 'R';
                 }
-              
-           
+
+
                 SDL_Log("Mouse x = %i , Mouse y = %i , IIS1 = %i , CASE = %s, GRAB = %i , PIECE_DROP = %i", mouse_x, mouse_y, IsInSquare, CASE, GrabMode, PieceDrop);
 
 
@@ -941,22 +1041,22 @@ int main(int argc, char* argv[])
 
                if (SDL_BUTTON_LEFT && IsInSquare == 0) {
                     mouse_left = 1;
-                    SDL_Log("LE BOUTON GAUCHE EST CLIQUE");            
+                    SDL_Log("LE BOUTON GAUCHE EST CLIQUE");
                }
                else if (SDL_BUTTON_LEFT && IsInSquare == 1) {
                    SDL_Log("GRAB");
                    if (GrabMode == 0) {
                        GrabMode = 1;
                    }
-                   
+
                }
-                
+
                //VALEURE SAVOIR CASE DE DEPART
 
 
-               
+
                break;
-                
+
             case SDL_MOUSEBUTTONUP:
 
                 if (GrabMode == 1) {
@@ -1260,9 +1360,9 @@ int main(int argc, char* argv[])
                         break;
                     }
                }
-                
 
-               
+
+
 
                GrabMode = 0;
                break;
@@ -1278,7 +1378,7 @@ int main(int argc, char* argv[])
                     {
                         square.x = square.x + 4;
                     }*/
-                    
+
             }
         }
 
@@ -1402,7 +1502,7 @@ int main(int argc, char* argv[])
         //RECTANGLE TEST
         SDL_SetRenderDrawColor(pRenderer, 0, 255, 0, 0);
         //SDL_RenderFillRect(pRenderer, &square);
-        
+
         //blanc
         SDL_RenderCopy(pRenderer, tab[0], NULL, &square);
         SDL_RenderCopy(pRenderer, tab[1], NULL, &a1);
@@ -1443,8 +1543,8 @@ int main(int argc, char* argv[])
 
         SDL_RenderPresent(pRenderer);
 
-        
-        
+
+
 
 
         SDL_Delay(20);

@@ -9,14 +9,33 @@
 #define TAILLE 120
 #define LIMITE 64
 
+//detection du tour de jeu
+bool white_pl = false;
+bool black_pl = false;
+
+//Variables pour gérer la prise en passant
+char bl_last_move  [10];
+char nr_last_move  [10];
+char tmp_last_move [10];
+int first_pos;
+int new_pos;
+
 //variable de sauvegarde
 char nom_save [20];
 char date_save [20];
 char savefile [100];
+char load [50];
+
 //à qui le tour : 0 = Blanc, 1 = Noir
 int role = 0;
 
-int c_menu =0;
+//Variable permettant de controler le roque
+bool bl_roque = false;
+bool nr_roque = false;
+bool roque = false;
+char tour_to_roque [20];
+int  pos_tour_to_roque;
+
 //Plateau du jeu
 Piece echiquier [LIMITE];
 
@@ -34,8 +53,24 @@ int indice_arr = 0;
 //tableau des pieces en jeu
 Piece pieces_en_jeu [LIMITE];
 
-//tableau des pieces capturées
-Piece pieces_capturees [LIMITE];
+//Pieces blanches
+Piece b_roi = {ROI,BLANC,0,false};
+Piece b_dame = {DAME,BLANC,9,false};
+Piece b_tour = {TOUR,BLANC,5,false};
+Piece b_fou = {FOU,BLANC,3,false};
+Piece b_cavalier = {CAVALIER,BLANC,3,false};
+Piece b_pion = {PION,BLANC,1,false};
+
+//Pieces noires
+Piece n_roi = {ROI,NOIR,0,false};
+Piece n_dame = {DAME,NOIR,9,false};
+Piece n_tour = {TOUR,NOIR,5,false};
+Piece n_fou = {FOU,NOIR,3,false};
+Piece n_cavalier = {CAVALIER,NOIR,3,false};
+Piece n_pion = {PION,NOIR,1,false};
+
+//case vide
+Piece case_vide = {VIDE,NONE,0,false};
 
 //tableau des deplacement possibles pour tester l'echec et mat
 int deplacement_echec [LIMITE];
@@ -65,12 +100,12 @@ int mailbox [] = {
 
   // tableau de LIMITE element pour récupérer l'indice d'une case demandée et vérifier si elle sort de l'echiquier sur le tableau précédent
   // les valeurs contenues dans ce tableau correspondent aux indices des cases 0 à LIMITE sur le tableau de 120 element
-  int tabLIMITE []= {
+  int tab64 []= {
     21, 22, 23, 24, 25, 26, 27, 28,
     31, 32, 33, 34, 35, 36, 37, 38,
     41, 42, 43, 44, 45, 46, 47, 48,
     51, 52, 53, 54, 55, 56, 57, 58,
-    61, 62, 63, LIMITE, 65, 66, 67, 68,
+    61, 62, 63, 64, 65, 66, 67, 68,
     71, 72, 73, 74, 75, 76, 77, 78,
     81, 82, 83, 84, 85, 86, 87, 88,
     91, 92, 93, 94, 95, 96, 97, 98
@@ -95,24 +130,7 @@ int pos_pions [8];
 
 //Initialisation du plateau
 void init_plateau(Piece plateau []){
-  //Pieces blanches
-  Piece b_roi = {ROI,BLANC,value[0]};
-  Piece b_dame = {DAME,BLANC,value[1]};
-  Piece b_tour = {TOUR,BLANC,value[2]};
-  Piece b_fou = {FOU,BLANC,value[3]};
-  Piece b_cavalier = {CAVALIER,BLANC,value[4]};
-  Piece b_pion = {PION,BLANC,value[5]};
 
-  //Pieces noires
-  Piece n_roi = {ROI,NOIR,value[0]};
-  Piece n_dame = {DAME,NOIR,value[1]};
-  Piece n_tour = {TOUR,NOIR,value[2]};
-  Piece n_fou = {FOU,NOIR,value[3]};
-  Piece n_cavalier = {CAVALIER,NOIR,value[4]};
-  Piece n_pion = {PION,NOIR,value[5]};
-
-  //case vide
-  Piece case_vide = {VIDE,NONE,value[0]};
   //pour des raisons pratiques on met toutes les cases à des cases vides
   for (int i=0; i<LIMITE; i++){
     plateau [i] = case_vide;
@@ -370,8 +388,18 @@ void get_moves_pion(int ind_case, int couleur, int tab []){
         //on teste si la case de devant est libre et on 'lajoute si c'est vrai
         if(echiquier[ind_case-8].n==6) insert_element(tab,ind_case-8);
         //on teste si les cases diagonales sont prises par une piece adverse pour les attaquer et on l'ajoute
-        if(echiquier[ind_case-7].c==1 && mailbox[tabLIMITE[ind_case-7]-1]!=-1) insert_element(tab,ind_case-7);
-        if(echiquier[ind_case-9].c==1 && mailbox[tabLIMITE[ind_case-7]+1]!=-1) insert_element(tab,ind_case-9);
+        if(echiquier[ind_case-7].c==1 && mailbox[tab64[ind_case-7]-1]!=-1) insert_element(tab,ind_case-7);
+        if(echiquier[ind_case-9].c==1 && mailbox[tab64[ind_case-9]+1]!=-1) insert_element(tab,ind_case-9);
+        //tester la prise en passant
+        if (ind_case<32 && ind_case > 23 ){
+          if(echiquier[ind_case-1].n==5 && echiquier[ind_case-9].n==6 && echiquier[ind_case-1].c==1 && strcmp(nr_last_move,coord[ind_case-1])==0){
+            if(new_pos-16==first_pos) insert_element(tab,ind_case-9);
+          }
+          if(echiquier[ind_case+1].n==5 && echiquier[ind_case-7].n==6 && echiquier[ind_case+1].c==1 && strcmp(nr_last_move,coord[ind_case+1])==0){
+            if(new_pos-16==first_pos) insert_element(tab,ind_case-7);
+          }
+        }
+
         break;
 
     case 1 :
@@ -380,9 +408,17 @@ void get_moves_pion(int ind_case, int couleur, int tab []){
         if(echiquier[ind_case+16].n==6) insert_element(tab,ind_case+16);
       }
       if(echiquier[ind_case+8].n==6) insert_element(tab,ind_case+8);
-      if(echiquier[ind_case+7].c==0 && mailbox[tabLIMITE[ind_case+7]+1]!=-1) insert_element(tab,ind_case+7);
-      if(echiquier[ind_case+9].c==0 && mailbox[tabLIMITE[ind_case+7]-1]!=-1) insert_element(tab,ind_case+9);
-
+      if(echiquier[ind_case+7].c==0 && mailbox[tab64[ind_case+7]+1]!=-1) insert_element(tab,ind_case+7);
+      if(echiquier[ind_case+9].c==0 && mailbox[tab64[ind_case+9]-1]!=-1) insert_element(tab,ind_case+9);
+      //tester la prise en passant
+      if (ind_case<40 && ind_case > 31 ){
+        if(echiquier[ind_case+1].n==5 && echiquier[ind_case+9].n==6 && echiquier[ind_case+1].c==0 && strcmp(bl_last_move,coord[ind_case+1])==0){
+          if(new_pos+16==first_pos) insert_element(tab,ind_case+9);
+        }
+        if(echiquier[ind_case-1].n==5 && echiquier[ind_case+7].n==6 && echiquier[ind_case-1].c==0 && strcmp(bl_last_move,coord[ind_case-1])==0){
+          if(new_pos+16==first_pos) insert_element(tab,ind_case+7);
+        }
+      }
       break;
   }
 }
@@ -394,42 +430,42 @@ void get_moves_cavalier(int ind_case, int couleur, int tab []){
 
     case 0 :
     if(ind_case-6 <LIMITE && ind_case-6 >=0) {
-      if(mailbox[tabLIMITE[ind_case-6]]!=-1 && mailbox[tabLIMITE[ind_case-6]-2]!=-1){
+      if(mailbox[tab64[ind_case-6]]!=-1 && mailbox[tab64[ind_case-6]-2]!=-1){
         if(echiquier[ind_case-6].n==6 || echiquier[ind_case-6].c==1) insert_element(tab,ind_case-6);
       }
     }
     if(ind_case+6 <LIMITE && ind_case+6 >=0) {
-      if(mailbox[tabLIMITE[ind_case+6]]!=-1 && mailbox[tabLIMITE[ind_case+6]+2]!=-1){
+      if(mailbox[tab64[ind_case+6]]!=-1 && mailbox[tab64[ind_case+6]+2]!=-1){
         if(echiquier[ind_case+6].n==6 || echiquier[ind_case+6].c==1) insert_element(tab,ind_case+6);
       }
     }
     if(ind_case-10 <LIMITE && ind_case-10 >=0) {
-      if(mailbox[tabLIMITE[ind_case-10]]!=-1){
+      if(mailbox[tab64[ind_case-10]]!=-1){
         if(echiquier[ind_case-10].n==6 || echiquier[ind_case-10].c==1) insert_element(tab,ind_case-10);
       }
     }
     if(ind_case+10 <LIMITE && ind_case+10 >=0) {
-      if(mailbox[tabLIMITE[ind_case+10]]!=-1){
+      if(mailbox[tab64[ind_case+10]]!=-1){
         if(echiquier[ind_case+10].n==6 || echiquier[ind_case+10].c==1) insert_element(tab,ind_case+10);
       }
     }
     if(ind_case-15 <LIMITE && ind_case-15 >=0) {
-      if(mailbox[tabLIMITE[ind_case-15]]!=-1){
+      if(mailbox[tab64[ind_case-15]]!=-1){
         if(echiquier[ind_case-15].n==6 || echiquier[ind_case-15].c==1) insert_element(tab,ind_case-15);
       }
     }
     if(ind_case+15 <LIMITE  && ind_case+15 >=0){
-      if(mailbox[tabLIMITE[ind_case+15]]!=-1){
+      if(mailbox[tab64[ind_case+15]]!=-1){
         if(echiquier[ind_case+15].n==6 || echiquier[ind_case+15].c==1) insert_element(tab,ind_case+15);
       }
     }
     if(ind_case-17 <LIMITE  && ind_case-17 >=0){
-      if(mailbox[tabLIMITE[ind_case-17]]!=-1){
+      if(mailbox[tab64[ind_case-17]]!=-1){
         if(echiquier[ind_case-17].n==6 || echiquier[ind_case-17].c==1) insert_element(tab,ind_case-17);
       }
     }
     if(ind_case+17 <LIMITE  && ind_case+17 >=0){
-      if(mailbox[tabLIMITE[ind_case+17]]!=-1){
+      if(mailbox[tab64[ind_case+17]]!=-1){
         if(echiquier[ind_case+17].n==6 || echiquier[ind_case+17].c==1) insert_element(tab,ind_case+17);
       }
     }
@@ -437,42 +473,42 @@ void get_moves_cavalier(int ind_case, int couleur, int tab []){
 
     case 1:
       if(ind_case-6 >=0) {
-        if(mailbox[tabLIMITE[ind_case-6]]!=-1 && mailbox[tabLIMITE[ind_case-6]-2]!=-1){
+        if(mailbox[tab64[ind_case-6]]!=-1 && mailbox[tab64[ind_case-6]-2]!=-1){
           if(echiquier[ind_case-6].n==6 || echiquier[ind_case-6].c==0) insert_element(tab,ind_case-6);
         }
       }
       if(ind_case+6 <LIMITE) {
-        if(mailbox[tabLIMITE[ind_case+6]]!=-1 && mailbox[tabLIMITE[ind_case+6]+2]!=-1){
+        if(mailbox[tab64[ind_case+6]]!=-1 && mailbox[tab64[ind_case+6]+2]!=-1){
           if(echiquier[ind_case+6].n==6 || echiquier[ind_case+6].c==0) insert_element(tab,ind_case+6);
         }
       }
       if(ind_case-10 >=0) {
-        if(mailbox[tabLIMITE[ind_case-10]]!=-1){
+        if(mailbox[tab64[ind_case-10]]!=-1){
           if(echiquier[ind_case-10].n==6 || echiquier[ind_case-10].c==0) insert_element(tab,ind_case-10);
         }
       }
       if(ind_case+10 <LIMITE) {
-        if(mailbox[tabLIMITE[ind_case+10]]!=-1){
+        if(mailbox[tab64[ind_case+10]]!=-1){
           if(echiquier[ind_case+10].n==6 || echiquier[ind_case+10].c==0) insert_element(tab,ind_case+10);
         }
       }
       if(ind_case-15 >=0) {
-        if(mailbox[tabLIMITE[ind_case-15]]!=-1){
+        if(mailbox[tab64[ind_case-15]]!=-1){
           if(echiquier[ind_case-15].n==6 || echiquier[ind_case-15].c==0) insert_element(tab,ind_case-15);
         }
       }
       if(ind_case+15 <LIMITE){
-        if(mailbox[tabLIMITE[ind_case+15]]!=-1){
+        if(mailbox[tab64[ind_case+15]]!=-1){
           if(echiquier[ind_case+15].n==6 || echiquier[ind_case+15].c==0) insert_element(tab,ind_case+15);
         }
       }
       if(ind_case-17 >=0){
-        if(mailbox[tabLIMITE[ind_case-17]]!=-1){
+        if(mailbox[tab64[ind_case-17]]!=-1){
           if(echiquier[ind_case-17].n==6 || echiquier[ind_case-17].c==0) insert_element(tab,ind_case-17);
         }
       }
       if(ind_case+17 <LIMITE){
-        if(mailbox[tabLIMITE[ind_case+17]]!=-1){
+        if(mailbox[tab64[ind_case+17]]!=-1){
           if(echiquier[ind_case+17].n==6 || echiquier[ind_case+17].c==0) insert_element(tab,ind_case+17);
         }
       }
@@ -489,7 +525,7 @@ void get_moves_fou(int ind_case, int couleur, int tab []){
     // Il faut donc tester chacune de ces 4 cases, et continuer sur la ligne diagonale jusqu'à ce qu'on touve un obstacle : une piece adverse, une piece alliée, ou les bords de l'echiquier
     case 0 :
       while(ind_case-cpt >=0){
-        if(mailbox[tabLIMITE[ind_case-cpt]]!=-1 && mailbox[tabLIMITE[ind_case-cpt]-1]!=-1){
+        if(mailbox[tab64[ind_case-cpt]]!=-1 && mailbox[tab64[ind_case-cpt]-1]!=-1){
           if (echiquier[ind_case-cpt].c==0) break;
           if(echiquier[ind_case-cpt].c==1 ) {
             insert_element(tab,ind_case-cpt);
@@ -504,7 +540,7 @@ void get_moves_fou(int ind_case, int couleur, int tab []){
       }
       cpt = 7;
       while(ind_case+cpt <LIMITE){
-        if(mailbox[tabLIMITE[ind_case+cpt]]!=-1 && mailbox[tabLIMITE[ind_case+cpt]+1]!=-1){
+        if(mailbox[tab64[ind_case+cpt]]!=-1 && mailbox[tab64[ind_case+cpt]+1]!=-1){
           if (echiquier[ind_case+cpt].c==0) break;
           if(echiquier[ind_case+cpt].c==1 ) {
             insert_element(tab,ind_case+cpt);
@@ -519,7 +555,7 @@ void get_moves_fou(int ind_case, int couleur, int tab []){
       }
       cpt = 9;
       while(ind_case+cpt <LIMITE){
-        if(mailbox[tabLIMITE[ind_case+cpt]]!=-1 && mailbox[tabLIMITE[ind_case+cpt]-1]!=-1){
+        if(mailbox[tab64[ind_case+cpt]]!=-1 && mailbox[tab64[ind_case+cpt]-1]!=-1){
           if (echiquier[ind_case+cpt].c==0) break;
           if(echiquier[ind_case+cpt].c==1 ) {
             insert_element(tab,ind_case+cpt);
@@ -534,7 +570,7 @@ void get_moves_fou(int ind_case, int couleur, int tab []){
       }
       cpt=9;
       while(ind_case-cpt >=0){
-        if(mailbox[tabLIMITE[ind_case-cpt]]!=-1 && mailbox[tabLIMITE[ind_case-cpt]+1]!=-1){
+        if(mailbox[tab64[ind_case-cpt]]!=-1 && mailbox[tab64[ind_case-cpt]+1]!=-1){
           if (echiquier[ind_case-cpt].c==0) break;
           if(echiquier[ind_case-cpt].c==1 ) {
             insert_element(tab,ind_case-cpt);
@@ -551,7 +587,7 @@ void get_moves_fou(int ind_case, int couleur, int tab []){
 
     case 1 :
       while(ind_case-cpt >=0){
-        if(mailbox[tabLIMITE[ind_case-cpt]]!=-1 && mailbox[tabLIMITE[ind_case-cpt]-1]!=-1){
+        if(mailbox[tab64[ind_case-cpt]]!=-1 && mailbox[tab64[ind_case-cpt]-1]!=-1){
           if (echiquier[ind_case-cpt].c==1) break;
           if(echiquier[ind_case-cpt].c==0 ) {
             insert_element(tab,ind_case-cpt);
@@ -566,7 +602,7 @@ void get_moves_fou(int ind_case, int couleur, int tab []){
       }
       cpt = 7;
       while(ind_case+cpt <LIMITE){
-        if(mailbox[tabLIMITE[ind_case+cpt]]!=-1 && mailbox[tabLIMITE[ind_case+cpt]+1]!=-1){
+        if(mailbox[tab64[ind_case+cpt]]!=-1 && mailbox[tab64[ind_case+cpt]+1]!=-1){
           if (echiquier[ind_case+cpt].c==1) break;
           if(echiquier[ind_case+cpt].c==0 ) {
             insert_element(tab,ind_case+cpt);
@@ -581,7 +617,7 @@ void get_moves_fou(int ind_case, int couleur, int tab []){
       }
       cpt = 9;
       while(ind_case+cpt <LIMITE){
-        if(mailbox[tabLIMITE[ind_case+cpt]]!=-1 && mailbox[tabLIMITE[ind_case+cpt]-1]!=-1){
+        if(mailbox[tab64[ind_case+cpt]]!=-1 && mailbox[tab64[ind_case+cpt]-1]!=-1){
           if (echiquier[ind_case+cpt].c==1) break;
           if(echiquier[ind_case+cpt].c==0 ) {
             insert_element(tab,ind_case+cpt);
@@ -596,7 +632,7 @@ void get_moves_fou(int ind_case, int couleur, int tab []){
       }
       cpt=9;
       while(ind_case-cpt >=0){
-        if(mailbox[tabLIMITE[ind_case-cpt]]!=-1 && mailbox[tabLIMITE[ind_case-cpt]+1]!=-1){
+        if(mailbox[tab64[ind_case-cpt]]!=-1 && mailbox[tab64[ind_case-cpt]+1]!=-1){
           if (echiquier[ind_case-cpt].c==1) break;
           if(echiquier[ind_case-cpt].c==0 ) {
             insert_element(tab,ind_case-cpt);
@@ -624,7 +660,7 @@ void get_moves_tour(int ind_case, int couleur, int tab []){
     case 0 :
       // déplacement horizontal à droite
       while(ind_case+cpt < LIMITE ){
-        if(mailbox[tabLIMITE[ind_case+cpt]] !=-1 && mailbox[tabLIMITE[ind_case+cpt]-1] !=-1 ){
+        if(mailbox[tab64[ind_case+cpt]] !=-1 && mailbox[tab64[ind_case+cpt]-1] !=-1 ){
           if (echiquier[ind_case+cpt].c==0) break;
           if(echiquier[ind_case+cpt].c==1 ) {
             insert_element(tab,ind_case+cpt);
@@ -640,7 +676,7 @@ void get_moves_tour(int ind_case, int couleur, int tab []){
       //déplacement horizontal à gauche
       cpt = 1;
       while(ind_case-cpt >= 0 ){
-        if(mailbox[tabLIMITE[ind_case-cpt]] !=-1 && mailbox[tabLIMITE[ind_case-cpt]+1] !=-1 ){
+        if(mailbox[tab64[ind_case-cpt]] !=-1 && mailbox[tab64[ind_case-cpt]+1] !=-1 ){
           if (echiquier[ind_case-cpt].c==0) break;
           if(echiquier[ind_case-cpt].c==1 ) {
             insert_element(tab,ind_case-cpt);
@@ -656,7 +692,7 @@ void get_moves_tour(int ind_case, int couleur, int tab []){
       //déplacement vertical vers le haut
       cpt =8;
       while(ind_case-cpt >= 0 ){
-        if(mailbox[tabLIMITE[ind_case-cpt]] !=-1){
+        if(mailbox[tab64[ind_case-cpt]] !=-1){
           if (echiquier[ind_case-cpt].c==0) break;
           if(echiquier[ind_case-cpt].c==1 ) {
             insert_element(tab,ind_case-cpt);
@@ -672,7 +708,7 @@ void get_moves_tour(int ind_case, int couleur, int tab []){
       //déplacement vertical vers le bas
       cpt =8;
       while(ind_case+cpt < LIMITE ){
-        if(mailbox[tabLIMITE[ind_case+cpt]] !=-1){
+        if(mailbox[tab64[ind_case+cpt]] !=-1){
           if (echiquier[ind_case+cpt].c==0) break;
           if(echiquier[ind_case+cpt].c==1 ) {
             insert_element(tab,ind_case+cpt);
@@ -690,7 +726,7 @@ void get_moves_tour(int ind_case, int couleur, int tab []){
     case 1 :
       // déplacement horizontal à droite
       while(ind_case+cpt < LIMITE ){
-        if(mailbox[tabLIMITE[ind_case+cpt]] !=-1 && mailbox[tabLIMITE[ind_case+cpt]-1] !=-1 ){
+        if(mailbox[tab64[ind_case+cpt]] !=-1 && mailbox[tab64[ind_case+cpt]-1] !=-1 ){
           if (echiquier[ind_case+cpt].c==1) break;
           if(echiquier[ind_case+cpt].c==0 ) {
             insert_element(tab,ind_case+cpt);
@@ -706,7 +742,7 @@ void get_moves_tour(int ind_case, int couleur, int tab []){
       //déplacement horizontal à gauche
       cpt = 1;
       while(ind_case-cpt >= 0 ){
-        if(mailbox[tabLIMITE[ind_case-cpt]] !=-1 && mailbox[tabLIMITE[ind_case-cpt]+1] !=-1 ){
+        if(mailbox[tab64[ind_case-cpt]] !=-1 && mailbox[tab64[ind_case-cpt]+1] !=-1 ){
           if (echiquier[ind_case-cpt].c==1) break;
           if(echiquier[ind_case-cpt].c==0 ) {
             insert_element(tab,ind_case-cpt);
@@ -722,7 +758,7 @@ void get_moves_tour(int ind_case, int couleur, int tab []){
       //déplacement vertical vers le haut
       cpt =8;
       while(ind_case-cpt >= 0 ){
-        if(mailbox[tabLIMITE[ind_case-cpt]] !=-1){
+        if(mailbox[tab64[ind_case-cpt]] !=-1){
           if (echiquier[ind_case-cpt].c==1) break;
           if(echiquier[ind_case-cpt].c==0 ) {
             insert_element(tab,ind_case-cpt);
@@ -738,7 +774,7 @@ void get_moves_tour(int ind_case, int couleur, int tab []){
       //déplacement vertical vers le bas
       cpt =8;
       while(ind_case+cpt < LIMITE ){
-        if(mailbox[tabLIMITE[ind_case+cpt]] !=-1){
+        if(mailbox[tab64[ind_case+cpt]] !=-1){
           if (echiquier[ind_case+cpt].c==1) break;
           if(echiquier[ind_case+cpt].c==0 ) {
             insert_element(tab,ind_case+cpt);
@@ -766,72 +802,72 @@ void get_moves_roi(int ind_case, int couleur, int tab []){
   switch(couleur){
     case 0 :
     //une case à droite
-    if(ind_case+1 <LIMITE && mailbox[tabLIMITE[ind_case+1]] !=-1 && mailbox[tabLIMITE[ind_case+1]-1] !=-1 ){
+    if(ind_case+1 <LIMITE && mailbox[tab64[ind_case+1]] !=-1 && mailbox[tab64[ind_case+1]-1] !=-1 ){
       if(echiquier[ind_case+1].c==1 || echiquier[ind_case+1].n==6) insert_element(tab,ind_case+1);
     }
     //une case à gauche
-    if(ind_case-1 >=0 && mailbox[tabLIMITE[ind_case-1]] !=-1 && mailbox[tabLIMITE[ind_case-1]+1] !=-1 ){
+    if(ind_case-1 >=0 && mailbox[tab64[ind_case-1]] !=-1 && mailbox[tab64[ind_case-1]+1] !=-1 ){
       if(echiquier[ind_case-1].c==1 || echiquier[ind_case-1].n==6) insert_element(tab,ind_case-1);
     }
     //une case devant
-    if(ind_case-8 >=0 && mailbox[tabLIMITE[ind_case-8]] !=-1 ){
+    if(ind_case-8 >=0 && mailbox[tab64[ind_case-8]] !=-1 ){
       if(echiquier[ind_case-8].c==1 || echiquier[ind_case-8].n==6) insert_element(tab,ind_case-8);
     }
     //une case en arrière
-    if(ind_case+8 <LIMITE && mailbox[tabLIMITE[ind_case+8]] !=-1 ){
+    if(ind_case+8 <LIMITE && mailbox[tab64[ind_case+8]] !=-1 ){
       if(echiquier[ind_case+8].c==1 || echiquier[ind_case+8].n==6) insert_element(tab,ind_case+8);
     }
 
     //une case en diago haut droite
-    if(ind_case-7 >=0 && mailbox[tabLIMITE[ind_case-7]] !=-1  && mailbox[tabLIMITE[ind_case-7]-1] !=-1){
+    if(ind_case-7 >=0 && mailbox[tab64[ind_case-7]] !=-1  && mailbox[tab64[ind_case-7]-1] !=-1){
       if(echiquier[ind_case-7].c==1 || echiquier[ind_case-7].n==6) insert_element(tab,ind_case-7);
     }
     //une case en diago haut gauche
-    if(ind_case-9 >=0 && mailbox[tabLIMITE[ind_case-9]] !=-1  && mailbox[tabLIMITE[ind_case-9]+1] !=-1){
+    if(ind_case-9 >=0 && mailbox[tab64[ind_case-9]] !=-1  && mailbox[tab64[ind_case-9]+1] !=-1){
       if(echiquier[ind_case-9].c==1 || echiquier[ind_case-9].n==6) insert_element(tab,ind_case-9);
     }
     //une case en diago bas gauche
-    if(ind_case+7 <LIMITE && mailbox[tabLIMITE[ind_case+7]] !=-1  && mailbox[tabLIMITE[ind_case+7]+1] !=-1){
+    if(ind_case+7 <LIMITE && mailbox[tab64[ind_case+7]] !=-1  && mailbox[tab64[ind_case+7]+1] !=-1){
       if(echiquier[ind_case+7].c==1 || echiquier[ind_case+7].n==6) insert_element(tab,ind_case+7);
     }
     //une case en diago bas droite
-    if(ind_case+9 <LIMITE && mailbox[tabLIMITE[ind_case+9]] !=-1  && mailbox[tabLIMITE[ind_case+9]-1] !=-1){
+    if(ind_case+9 <LIMITE && mailbox[tab64[ind_case+9]] !=-1  && mailbox[tab64[ind_case+9]-1] !=-1){
       if(echiquier[ind_case+9].c==1 || echiquier[ind_case+9].n==6) insert_element(tab,ind_case+9);
     }
     break;
 
     case 1 :
       //une case à droite
-      if(ind_case+1 <LIMITE && mailbox[tabLIMITE[ind_case+1]] !=-1 && mailbox[tabLIMITE[ind_case+1]-1] !=-1 ){
+      if(ind_case+1 <LIMITE && mailbox[tab64[ind_case+1]] !=-1 && mailbox[tab64[ind_case+1]-1] !=-1 ){
         if(echiquier[ind_case+1].c==0 || echiquier[ind_case+1].n==6) insert_element(tab,ind_case+1);
       }
       //une case à gauche
-      if(ind_case-1 >=0 && mailbox[tabLIMITE[ind_case-1]] !=-1 && mailbox[tabLIMITE[ind_case-1]+1] !=-1 ){
+      if(ind_case-1 >=0 && mailbox[tab64[ind_case-1]] !=-1 && mailbox[tab64[ind_case-1]+1] !=-1 ){
         if(echiquier[ind_case-1].c==0 || echiquier[ind_case-1].n==6) insert_element(tab,ind_case-1);
       }
       //une case devant
-      if(ind_case-8 >=0 && mailbox[tabLIMITE[ind_case-8]] !=-1 ){
+      if(ind_case-8 >=0 && mailbox[tab64[ind_case-8]] !=-1 ){
         if(echiquier[ind_case-8].c==0 || echiquier[ind_case-8].n==6) insert_element(tab,ind_case-8);
       }
       //une case en arrière
-      if(ind_case+8 <LIMITE && mailbox[tabLIMITE[ind_case+8]] !=-1 ){
+      if(ind_case+8 <LIMITE && mailbox[tab64[ind_case+8]] !=-1 ){
         if(echiquier[ind_case+8].c==0 || echiquier[ind_case+8].n==6) insert_element(tab,ind_case+8);
       }
 
       //une case en diago haut droite
-      if(ind_case-7 >=0 && mailbox[tabLIMITE[ind_case-7]] !=-1  && mailbox[tabLIMITE[ind_case-7]-1] !=-1){
+      if(ind_case-7 >=0 && mailbox[tab64[ind_case-7]] !=-1  && mailbox[tab64[ind_case-7]-1] !=-1){
         if(echiquier[ind_case-7].c==0 || echiquier[ind_case-7].n==6) insert_element(tab,ind_case-7);
       }
       //une case en diago haut gauche
-      if(ind_case-9 >=0 && mailbox[tabLIMITE[ind_case-9]] !=-1  && mailbox[tabLIMITE[ind_case-9]+1] !=-1){
+      if(ind_case-9 >=0 && mailbox[tab64[ind_case-9]] !=-1  && mailbox[tab64[ind_case-9]+1] !=-1){
         if(echiquier[ind_case-9].c==0 || echiquier[ind_case-9].n==6) insert_element(tab,ind_case-9);
       }
       //une case en diago bas gauche
-      if(ind_case+7 <LIMITE && mailbox[tabLIMITE[ind_case+7]] !=-1  && mailbox[tabLIMITE[ind_case+7]+1] !=-1){
+      if(ind_case+7 <LIMITE && mailbox[tab64[ind_case+7]] !=-1  && mailbox[tab64[ind_case+7]+1] !=-1){
         if(echiquier[ind_case+7].c==0 || echiquier[ind_case+7].n==6) insert_element(tab,ind_case+7);
       }
       //une case en diago bas droite
-      if(ind_case+9 <LIMITE && mailbox[tabLIMITE[ind_case+9]] !=-1  && mailbox[tabLIMITE[ind_case+9]-1] !=-1){
+      if(ind_case+9 <LIMITE && mailbox[tab64[ind_case+9]] !=-1  && mailbox[tab64[ind_case+9]-1] !=-1){
         if(echiquier[ind_case+9].c==0 || echiquier[ind_case+9].n==6) insert_element(tab,ind_case+9);
       }
       break;
@@ -849,581 +885,6 @@ int get_pos_roi(){
     for (int i=0; i<LIMITE; i++){
       if (echiquier[i].n==0 && echiquier[i].c==1) return i;
     }
-  }
-}
-
-//Savoir si une case est menacée
-bool is_attacked(int case_arrive, int couleur, Piece plateau []){
-  int cpt =1;
-  int testing_cavalier [LIMITE];
-  init_array(testing_cavalier,LIMITE);
-  switch (couleur){
-    case 0 :
-      //on vérifie la ligne droite
-      while(case_arrive+cpt < LIMITE ){
-        if(mailbox[tabLIMITE[case_arrive+cpt]] !=-1 && mailbox[tabLIMITE[case_arrive+cpt]-1] !=-1 ){
-          if ( plateau [case_arrive+cpt].n!=0 && plateau [case_arrive+cpt].c==0) break;
-          if (plateau [case_arrive+cpt].c==1 ) {
-            if(cpt==1 && plateau [case_arrive+cpt].n==0)return true;
-            if(plateau [case_arrive+cpt].n !=1  && plateau [case_arrive+cpt].n !=2 ) break;
-            if(plateau [case_arrive+cpt].n == 1 || plateau [case_arrive+cpt].n == 2) return true;
-          }
-        }
-        else break;
-        cpt++;
-      }
-      cpt=1;
-      //on vérifie la ligne gauche
-      while(case_arrive-cpt >=0 ){
-        if(mailbox[tabLIMITE[case_arrive-cpt]] !=-1 && mailbox[tabLIMITE[case_arrive-cpt]+1] !=-1 ){
-          if (plateau [case_arrive-cpt].n!=0 && plateau [case_arrive-cpt].c==0) break;
-          if(plateau [case_arrive-cpt].c==1 ) {
-            if(cpt==1 && plateau [case_arrive-cpt].n==0) return true;
-            if(plateau [case_arrive-cpt].n !=1 && plateau [case_arrive-cpt].n !=2 ) break;
-            if(plateau [case_arrive-cpt].n == 1 || plateau [case_arrive-cpt].n == 2) return true;
-          }
-        }
-        else break;
-        cpt++;
-      }
-      cpt =8;
-      //on vérifie la ligne du haut
-      while(case_arrive-cpt >= 0 ){
-        if(mailbox[tabLIMITE[case_arrive-cpt]] !=-1){
-          if (plateau [case_arrive-cpt].n!=0 && plateau [case_arrive-cpt].c==0) break;
-          if(plateau [case_arrive-cpt].c==1 ) {
-            if(cpt==8 && plateau [case_arrive-cpt].n==0)return true;
-            if(plateau [case_arrive-cpt].n != 1 && plateau [case_arrive-cpt].n != 2 ) break;
-            if(plateau [case_arrive-cpt].n == 1 || plateau [case_arrive-cpt].n == 2)return true;
-          }
-        }
-        else break;
-        cpt+=8;
-      }
-
-      cpt=8;
-
-      //on vérifie la ligne du bas
-      while(case_arrive+cpt < LIMITE ){
-        if(mailbox[tabLIMITE[case_arrive+cpt]] !=-1){
-          if (plateau [case_arrive+cpt].n!=0 && plateau [case_arrive+cpt].c==0) break;
-          if(plateau [case_arrive+cpt].c==1 ) {
-            if(cpt==8 && plateau [case_arrive+cpt].n==0)return true;
-            if(plateau [case_arrive+cpt].n !=1 && plateau [case_arrive+cpt].n !=2 ) break;
-            if(plateau [case_arrive+cpt].n == 1 || plateau [case_arrive+cpt].n == 2)return true;
-          }
-        }
-        else break;
-        cpt+=8;
-      }
-
-      cpt = 7;
-      //On vérifie la diagonale haute droite
-      while(case_arrive-cpt >=0){
-        if(mailbox[tabLIMITE[case_arrive-cpt]]!=-1 && mailbox[tabLIMITE[case_arrive-cpt]-1]!=-1){
-          if (plateau [case_arrive-cpt].n!=0 && plateau [case_arrive-cpt].c==0) break;
-          if(plateau [case_arrive-cpt].c==1 ) {
-            if(cpt==7)
-              if(plateau [case_arrive-cpt].n==0 || plateau [case_arrive-cpt].n==5)return true;
-            if(plateau [case_arrive-cpt].n !=1 && plateau [case_arrive-cpt].n !=3 ) break;
-            if(plateau [case_arrive-cpt].n == 1 || plateau [case_arrive-cpt].n == 3)return true;
-          }
-        }
-        else break;
-        cpt+=7;
-      }
-      cpt=7;
-      //On vérifie la diagonale basse gauche
-      while(case_arrive+cpt <LIMITE ){
-        if(mailbox[tabLIMITE[case_arrive+cpt]]!=-1 && mailbox[tabLIMITE[case_arrive+cpt]+1]!=-1){
-          if (plateau [case_arrive+cpt].n!=0 && plateau [case_arrive+cpt].c==0) break;
-          if(plateau [case_arrive+cpt].c==1 ) {
-            if(cpt==7 && plateau [case_arrive+cpt].n==0)return true;
-            if(plateau [case_arrive+cpt].n !=1 && plateau [case_arrive+cpt].n !=3 ) break;
-            if(plateau [case_arrive+cpt].n == 1 || plateau [case_arrive+cpt].n == 3)return true;
-          }
-        }
-        else break;
-        cpt+=7;
-      }
-      cpt=9;
-
-      //On vérifie la diagonale basse droite
-      while(case_arrive+cpt <LIMITE ){
-        if(mailbox[tabLIMITE[case_arrive+cpt]]!=-1 && mailbox[tabLIMITE[case_arrive+cpt]-1]!=-1){
-          if (plateau [case_arrive+cpt].n!=0 && plateau [case_arrive+cpt].c==0) break;
-          if(plateau [case_arrive+cpt].c==1 ) {
-            if(cpt==9 && plateau [case_arrive+cpt].n==0)return true;
-            if(plateau [case_arrive+cpt].n !=1 && plateau [case_arrive+cpt].n !=3 ) break;
-            if(plateau [case_arrive+cpt].n == 1 || plateau [case_arrive+cpt].n == 3)return true;
-          }
-        }
-        else break;
-        cpt+=9;
-      }
-      cpt=9;
-      //On vérifie la diagonale haute gauche
-      while(case_arrive-cpt >=0 ){
-        if(mailbox[tabLIMITE[case_arrive-cpt]]!=-1 && mailbox[tabLIMITE[case_arrive-cpt]+1]!=-1){
-          if (plateau [case_arrive-cpt].n!=0 && plateau [case_arrive-cpt].c==0) break;
-          if(plateau [case_arrive-cpt].c==1 ) {
-            if(cpt==9)
-              if(plateau [case_arrive-cpt].n==0 || plateau [case_arrive-cpt].n==5)return true;
-
-            if(plateau [case_arrive-cpt].n !=1 && plateau [case_arrive-cpt].n !=3 ) break;
-            if(plateau [case_arrive-cpt].n == 1 || plateau [case_arrive-cpt].n == 3)return true;
-          }
-        }
-        else break;
-        cpt+=9;
-      }
-
-      cpt=0;
-      //On vérifie si la case n'est pas menacée par un cavalier
-      //On parcour l'plateau  case par case, quand on tombe sur un cavalier on génère ses moves possibles dans le tableau
-      //quand on a les deplacements possibles des deux cavaliers adverses, on vérifie si la case d'arrivée qu'on a choisis correspond à une des cases possibles pour un cavaliers
-      //si c'est le cas on ajout cette case au tableau attacked pour dire que cette case est menacée
-
-      for(int i=0; i<LIMITE; i++){
-        if(cpt==2)break;
-        if (plateau [i].n==4 && plateau [i].c==1){
-          get_moves_cavalier(i,1,testing_cavalier);
-          cpt++;
-        }
-      }
-      if(is_in_array(testing_cavalier,case_arrive)) return true;
-
-      break;
-
-    case 1 :
-      //on vérifie la ligne droite
-      while(case_arrive+cpt < LIMITE ){
-        if(mailbox[tabLIMITE[case_arrive+cpt]] !=-1 && mailbox[tabLIMITE[case_arrive+cpt]-1] !=-1 ){
-          if (plateau [case_arrive+cpt].n!=0 && plateau [case_arrive+cpt].c==1) break;
-          if(plateau [case_arrive+cpt].c==0 ) {
-            if(cpt==1 && plateau [case_arrive+cpt].n==0)return true;
-            if(plateau [case_arrive+cpt].n !=1 && plateau [case_arrive+cpt].n !=2 ) break;
-            if(plateau [case_arrive+cpt].n == 1 || plateau [case_arrive+cpt].n == 2)return true;
-          }
-        }
-        else break;
-        cpt++;
-      }
-      cpt=1;
-      //on vérifie la ligne gauche
-      while(case_arrive-cpt >=0 ){
-        if(mailbox[tabLIMITE[case_arrive-cpt]] !=-1 && mailbox[tabLIMITE[case_arrive-cpt]+1] !=-1 ){
-          if (plateau [case_arrive-cpt].n!=0 && plateau [case_arrive-cpt].c==1) break;
-          if(plateau [case_arrive-cpt].c==0 ) {
-            if(cpt==1 && plateau [case_arrive-cpt].n==0)return true;
-            if(plateau [case_arrive-cpt].n !=1 && plateau [case_arrive-cpt].n !=2 ) break;
-            if(plateau [case_arrive-cpt].n == 1 || plateau [case_arrive-cpt].n == 2)return true;
-          }
-        }
-        else break;
-        cpt++;
-      }
-      cpt =8;
-      //on vérifie la ligne du haut
-      while(case_arrive-cpt >= 0 ){
-        if(mailbox[tabLIMITE[case_arrive-cpt]] !=-1){
-          if (plateau [case_arrive-cpt].n!=0 && plateau [case_arrive-cpt].c==1) break;
-          if(plateau [case_arrive-cpt].c==0 ) {
-            if(cpt==8 && plateau [case_arrive-cpt].n==0)return true;
-            if(plateau [case_arrive-cpt].n != 1 && plateau [case_arrive-cpt].n != 2 ) break;
-            if(plateau [case_arrive-cpt].n == 1 || plateau [case_arrive-cpt].n == 2)return true;
-          }
-        }
-        else break;
-        cpt+=8;
-      }
-
-      cpt=8;
-
-      //on vérifie la ligne du bas
-      while(case_arrive+cpt < LIMITE ){
-        if(mailbox[tabLIMITE[case_arrive+cpt]] !=-1){
-          if (plateau [case_arrive+cpt].n!=0 && plateau [case_arrive+cpt].c==1) break;
-          if(plateau [case_arrive+cpt].c==0 ) {
-            if(cpt==8 && plateau [case_arrive+cpt].n==0)return true;
-            if(plateau [case_arrive+cpt].n !=1  && plateau [case_arrive+cpt].n != 2 ) break;
-            if(plateau [case_arrive+cpt].n == 1 || plateau [case_arrive+cpt].n == 2)return true;
-          }
-        }
-        else break;
-        cpt+=8;
-      }
-
-      cpt = 7;
-      //On vérifie la diagonale haute droite
-      while(case_arrive-cpt >=0){
-        if(mailbox[tabLIMITE[case_arrive-cpt]]!=-1 && mailbox[tabLIMITE[case_arrive-cpt]-1]!=-1){
-          if (plateau [case_arrive-cpt].n!=0 && plateau [case_arrive-cpt].c==1) break;
-          if(plateau [case_arrive-cpt].c==0 ) {
-            if(cpt==7 && plateau [case_arrive-cpt].n==0)return true;
-            if(plateau [case_arrive-cpt].n !=1  && plateau [case_arrive-cpt].n != 3 ) break;
-            if(plateau [case_arrive-cpt].n == 1 || plateau [case_arrive-cpt].n == 3)return true;
-          }
-        }
-        else break;
-        cpt+=7;
-      }
-      cpt=7;
-      //On vérifie si on a pas de fou ou de dame sur la diagonale basse gauche
-      while(case_arrive+cpt <LIMITE ){
-        if(mailbox[tabLIMITE[case_arrive+cpt]]!=-1 && mailbox[tabLIMITE[case_arrive+cpt]+1]!=-1){
-          if (plateau [case_arrive+cpt].n!=0 && plateau [case_arrive+cpt].c==1) break;
-          if(plateau [case_arrive+cpt].c==0 ) {
-            if(cpt==7)
-              if(plateau [case_arrive+cpt].n==0 || plateau [case_arrive+cpt].n==5)return true;
-            if(plateau [case_arrive+cpt].n !=1  && plateau [case_arrive+cpt].n != 3 ) break;
-            if(plateau [case_arrive+cpt].n == 1 || plateau [case_arrive+cpt].n == 3)return true;
-          }
-        }
-        else break;
-        cpt+=7;
-      }
-      cpt=9;
-
-      //On vérifie la diagonale basse droite
-      while(case_arrive+cpt <LIMITE ){
-        if(mailbox[tabLIMITE[case_arrive+cpt]]!=-1 && mailbox[tabLIMITE[case_arrive+cpt]-1]!=-1){
-          if (plateau [case_arrive+cpt].n!=0 && plateau [case_arrive+cpt].c==1) break;
-          if(plateau [case_arrive+cpt].c==0 ) {
-            if(cpt==9)
-              if(plateau [case_arrive+cpt].n==0 || plateau [case_arrive+cpt].n==5)return true;
-            if(plateau [case_arrive+cpt].n != 1 && plateau [case_arrive+cpt].n != 3 ) break;
-            if(plateau [case_arrive+cpt].n == 1 || plateau [case_arrive+cpt].n == 3)return true;
-          }
-        }
-        else break;
-        cpt+=9;
-      }
-      cpt=9;
-      //On vérifie la diagonale haute gauche
-      while(case_arrive-cpt >=0 ){
-        if(mailbox[tabLIMITE[case_arrive-cpt]]!=-1 && mailbox[tabLIMITE[case_arrive-cpt]+1]!=-1){
-          if (plateau [case_arrive-cpt].n!=0 && plateau [case_arrive-cpt].c==1) break;
-          if(plateau [case_arrive-cpt].c==0 ) {
-            if(cpt==9 && plateau [case_arrive-cpt].n==0)return true;
-            if(plateau [case_arrive-cpt].n !=1  && plateau [case_arrive-cpt].n != 3 ) break;
-            if(plateau [case_arrive-cpt].n == 1 || plateau [case_arrive-cpt].n == 3)return true;
-          }
-        }
-        else break;
-        cpt+=9;
-      }
-      //cases menacées par des cavaliers
-
-      for(int i=0; i<LIMITE; i++){
-        if(cpt==2)break;
-        if (plateau [i].n==4 && plateau [i].c==0){
-          get_moves_cavalier(i,0,testing_cavalier);
-          cpt++;
-        }
-      }
-      if(is_in_array(testing_cavalier,case_arrive)) return true;
-      break;
-  }
-  return false;
-}
-
-//bouger une pièce sur l'échiquier
-bool move_piece(int dep, int arr, Piece plateau[]){
-  for(int i=0; i<TAILLE; i++){
-    //si on arrive à une valeur -2 ça veut dire qu'on a parcourru les moves possibles et que la case demandée n'y figure pas
-    // donc la case donnée est invalide, on affiche le message d'erreur et on quitte la boucle
-    if(possible_moves[i]==-2){
-      system("clear");
-      banner("../Utiles/banner.txt");
-      wprintf(L"Déplacement impossible ! Entrez une case valide !\n\n");
-      break;
-    }
-    if(arr == possible_moves[i]){
-      //case vide
-      Piece empty = {VIDE,NONE,value[0]};
-      plateau [arr]=plateau [dep];
-      plateau [dep]=empty;
-      return true;
-    }
-  }
-  return false;
-}
-
-//gérer le jeu à tour de role
-bool gerer_tour(int role, int piece){
-  if (role==0){
-    if(echiquier[piece].c==0) return true;
-    else {
-      system("clear");
-      banner("../Utiles/banner.txt");
-      wprintf(L"C'est aux blancs de jouer !\n");
-      return false;
-    }
-  }
-  if (role==1){
-    if(echiquier[piece].c==1) return true;
-    else {
-      system("clear");
-      banner("../Utiles/banner.txt");
-      wprintf(L"C'est aux noirs de jouer !\n");
-      return false;
-    }
-  }
-}
-
-void save_game(char date [20], char nom[20]){
-  FILE *fp;
-  strcpy(savefile, "Sauvegarde_le_");
-  strcat(savefile, date);
-  strcat(savefile, nom);
-  strcat(savefile, ".txt");
-  fp= fopen(savefile,"w");
-  fprintf(fp,"%i\n",role);
-  for(int i=0; i<LIMITE; i++){
-    fprintf(fp,"%i %i %i\n",i,echiquier[i].n,echiquier[i].c);
-  }
-  fclose(fp);
-}
-
-void load_game(char partie [100]){
-/*  FILE *fp;
-  savefile=partie;
-  fp= fopen(savefile,"r");
-  fscaf(fp,)*/
-}
-
-//récupérer les indices à partir des cases fournies par l'utilisateur
-void get_indices (){
-  wprintf(L"\n\n Instruction 1 -> ");
-  scanf("%s",case_dep);
-
-  if(strcmp(case_dep,"exit")==0) exit(0);
-  if(strcmp(case_dep,"save")==0){
-    wprintf(L"\n\n Vous avez choisis de sauvegarder et quitter la partie ! ");
-    wprintf(L"\n\n Entrez votre nom (Ex: Martin) -> ");
-    scanf("%s",nom_save);
-    wprintf(L"\n\n Entrez la date du jour (Ex: 25-03-2021) ->");
-    scanf("%s",date_save);
-
-    save_game(date_save,nom_save);
-    wprintf(L"\n\n Votre partie a bien été enregistrée ! A la prochaine !");
-
-    exit(0);
-  }
-  wprintf(L"\nInstruction 2 ->  ");
-  scanf("%s",case_arr);
-
-  //if(strcmp(case_dep,"save")==0)save_game();
-  for(int i=0; i<LIMITE; i++){
-    if(strcmp(case_dep, coord[i])==0){
-      indice_dep = i;
-    }
-    if(strcmp(case_arr,coord[i])==0){
-      indice_arr = i;
-    }
-  }
-}
-
-//switch les roles
-void switch_role (){
-  if(role==0)role=1;
-  else role=0;
-}
-
-//appeller la bonne fonction d'affichage en fonction du role
-void afficher(){
-  if(role==0) affiche_plateau();
-  else affiche_plateau_mirroir();
-}
-
-//détecter si le camp qui a le tour est en echec on renvoie true si on est en echec, sinon false
-bool detect_echec( Piece plateau[] ){
-  if (role == 0 ){
-    if(is_attacked(get_pos_roi(),0,plateau)){
-      return true;
-    }
-    else return false;
-  }
-  else{
-    if(is_attacked(get_pos_roi(),1,plateau)){
-      return true;
-    }
-    else return false;
-  }
-}
-
-//tester si un deplacement met le roi en echec ou pas, pour savoir si il est permis
-bool test_echec_after_move(int depart, int arrive){
-  if (move_piece(depart,arrive,test_echiquier)){
-    if (detect_echec(test_echiquier))
-      return true;
-    else
-      return false;
-  }
-  else return false;
-}
-
-//gère le deplacement de la pièce sélectionnée
-bool deplacement_piece(int indice_dep, int indice_arr){
-  init_array(possible_moves,TAILLE);
-  int type = echiquier[indice_dep].n;
-  switch (type) {
-    case 0 :
-      if(echiquier[indice_dep].c==0){
-        if(!is_attacked(indice_arr,0,echiquier)){
-          init_array(possible_moves,TAILLE);
-          get_moves_roi(indice_dep,echiquier[indice_dep].c,possible_moves);
-          if(move_piece(indice_dep,indice_arr,echiquier)){
-            wprintf(L"moves du roi  : ");
-            for(int k=0; k< TAILLE; k++){
-              if(possible_moves[k] == -2) break;
-              wprintf(L"%i, ",possible_moves[k]);
-            }
-           return true;
-          }
-          else return false;
-
-        }
-        else {
-          system("clear");
-          banner("../Utiles/banner.txt");
-          wprintf(L"Cette case est menacée! déplacement impossible !\n\n");
-          return false;
-        }
-      }
-      else{
-        if(!is_attacked(indice_arr,1,echiquier)){
-          get_moves_roi(indice_dep,echiquier[indice_dep].c,possible_moves);
-          if(move_piece(indice_dep,indice_arr,echiquier)){
-            wprintf(L"moves de la dame : ");
-            for(int k=0; k< TAILLE; k++){
-              if(possible_moves[k] == -2) break;
-              wprintf(L"%i, ",possible_moves[k]);
-            }
-           return true;
-          }
-          else return false;
-        }
-        else{
-          system("clear");
-          banner("../Utiles/banner.txt");
-          wprintf(L"Cette case est menacée! déplacement impossible !\n\n");
-          return false;
-        }
-      }
-      break;
-
-    case 1 :
-      get_moves_dame(indice_dep,echiquier[indice_dep].c,possible_moves);
-      if(test_echec_after_move(indice_dep,indice_arr)) {
-        system("clear");
-        banner("../Utiles/banner.txt");
-        wprintf(L"Le roi est en echec, ce deplacement est impossible !\n\n");
-        cpy_plateau(echiquier,test_echiquier);
-        return false;
-      }
-      else{
-        if(move_piece(indice_dep,indice_arr,echiquier)){
-          cpy_plateau(echiquier,test_echiquier);
-          wprintf(L"moves de la dame : ");
-          for(int k=0; k< TAILLE; k++){
-            if(possible_moves[k] == -2) break;
-            wprintf(L"%i, ",possible_moves[k]);
-          }
-          return true;
-        }
-        else return false;
-      }
-      break;
-    case 2 :
-      get_moves_tour(indice_dep,echiquier[indice_dep].c,possible_moves);
-      if(test_echec_after_move(indice_dep,indice_arr)) {
-        system("clear");
-        banner("../Utiles/banner.txt");
-        wprintf(L"Le roi est en echec, ce deplacement est impossible !\n\n");
-        cpy_plateau(echiquier,test_echiquier);
-        return false;
-      }
-      else{
-        if(move_piece(indice_dep,indice_arr,echiquier)){
-          cpy_plateau(echiquier,test_echiquier);
-          for(int k=0; k< TAILLE; k++){
-            if(possible_moves[k] == -2) break;
-            wprintf(L"%i, ",possible_moves[k]);
-          }
-          return true;
-        }
-        else return false;
-      }
-      break;
-    case 3 :
-      init_array(possible_moves,TAILLE);
-      get_moves_fou(indice_dep,echiquier[indice_dep].c,possible_moves);
-
-      if(test_echec_after_move(indice_dep,indice_arr)) {
-        system("clear");
-        banner("../Utiles/banner.txt");
-        wprintf(L"Le roi est en echec, ce deplacement est impossible !\n\n");
-        cpy_plateau(echiquier,test_echiquier);
-        return false;
-      }
-      else{
-        if(move_piece(indice_dep,indice_arr,echiquier)){
-          wprintf(L"moves possibles du fou : ");
-          for(int k=0; k< TAILLE; k++){
-            if(possible_moves[k] == -2) break;
-            wprintf(L"%i, ",possible_moves[k]);
-          }
-          cpy_plateau(echiquier,test_echiquier);
-          return true;
-        }
-        else return false;
-      }
-      break;
-    case 4 :
-      get_moves_cavalier(indice_dep,echiquier[indice_dep].c,possible_moves);
-      if(test_echec_after_move(indice_dep,indice_arr)) {
-        system("clear");
-        banner("../Utiles/banner.txt");
-        wprintf(L"Le roi est en echec, ce deplacement est impossible !\n\n");
-        cpy_plateau(echiquier,test_echiquier);
-        return false;
-      }
-      else{
-        if(move_piece(indice_dep,indice_arr,echiquier)){
-          cpy_plateau(echiquier,test_echiquier);
-          wprintf(L"\nmoves possibles du cavalier : ");
-          for(int k=0; k< TAILLE; k++){
-            if(possible_moves[k] == -2) break;
-            wprintf(L"%i, ",possible_moves[k]);
-          }
-          return true;
-        }
-        else return false;
-      }
-      break;
-    case 5 :
-      get_moves_pion(indice_dep,echiquier[indice_dep].c,possible_moves);
-      if(test_echec_after_move(indice_dep,indice_arr)) {
-        cpy_plateau(echiquier,test_echiquier);
-        system("clear");
-        banner("../Utiles/banner.txt");
-        wprintf(L"Le roi est en echec, ce deplacement est impossible !\n\n");
-        return false;
-      }
-      else{
-        if(move_piece(indice_dep,indice_arr,echiquier)){
-          cpy_plateau(echiquier,test_echiquier);
-          for(int k=0; k< TAILLE; k++){
-            if(possible_moves[k] == -2) break;
-            wprintf(L"%i, ",possible_moves[k]);
-          }
-          return true;
-        }
-        else return false;
-      }
-      break;
   }
 }
 
@@ -1476,7 +937,7 @@ void get_pos_fous(){
 }
 
 //Récupérer la pos des fous
-void get_pos_cavalier(){
+void get_pos_cavaliers(){
   if (role==0){
     init_array(pos_cavaliers,2);
     for (int i=0; i<LIMITE; i++){
@@ -1507,6 +968,708 @@ void get_pos_pions(){
   }
 }
 
+//Savoir si une case est menacée
+bool is_attacked(int case_arrive, int couleur, Piece plateau []){
+  int cpt =1;
+  int testing_cavalier [LIMITE];
+  init_array(testing_cavalier,LIMITE);
+  switch (couleur){
+    case 0 :
+      //on vérifie la ligne droite
+      while(case_arrive+cpt < LIMITE ){
+        if(mailbox[tab64[case_arrive+cpt]] !=-1 && mailbox[tab64[case_arrive+cpt]-1] !=-1 ){
+          if ( plateau [case_arrive+cpt].n!=0 && plateau [case_arrive+cpt].c==0) break;
+          if (plateau [case_arrive+cpt].c==1 ) {
+            if(cpt==1 && plateau [case_arrive+cpt].n==0)return true;
+            if(plateau [case_arrive+cpt].n !=1  && plateau [case_arrive+cpt].n !=2 ) break;
+            if(plateau [case_arrive+cpt].n == 1 || plateau [case_arrive+cpt].n == 2) return true;
+          }
+        }
+        else break;
+        cpt++;
+      }
+      cpt=1;
+      //on vérifie la ligne gauche
+      while(case_arrive-cpt >=0 ){
+        if(mailbox[tab64[case_arrive-cpt]] !=-1 && mailbox[tab64[case_arrive-cpt]+1] !=-1 ){
+          if (plateau [case_arrive-cpt].n!=0 && plateau [case_arrive-cpt].c==0) break;
+          if(plateau [case_arrive-cpt].c==1 ) {
+            if(cpt==1 && plateau [case_arrive-cpt].n==0) return true;
+            if(plateau [case_arrive-cpt].n !=1 && plateau [case_arrive-cpt].n !=2 ) break;
+            if(plateau [case_arrive-cpt].n == 1 || plateau [case_arrive-cpt].n == 2) return true;
+          }
+        }
+        else break;
+        cpt++;
+      }
+      cpt =8;
+      //on vérifie la ligne du haut
+      while(case_arrive-cpt >= 0 ){
+        if(mailbox[tab64[case_arrive-cpt]] !=-1){
+          if (plateau [case_arrive-cpt].n!=0 && plateau [case_arrive-cpt].c==0) break;
+          if(plateau [case_arrive-cpt].c==1 ) {
+            if(cpt==8 && plateau [case_arrive-cpt].n==0)return true;
+            if(plateau [case_arrive-cpt].n != 1 && plateau [case_arrive-cpt].n != 2 ) break;
+            if(plateau [case_arrive-cpt].n == 1 || plateau [case_arrive-cpt].n == 2)return true;
+          }
+        }
+        else break;
+        cpt+=8;
+      }
+
+      cpt=8;
+
+      //on vérifie la ligne du bas
+      while(case_arrive+cpt < LIMITE ){
+        if(mailbox[tab64[case_arrive+cpt]] !=-1){
+          if (plateau [case_arrive+cpt].n!=0 && plateau [case_arrive+cpt].c==0) break;
+          if(plateau [case_arrive+cpt].c==1 ) {
+            if(cpt==8 && plateau [case_arrive+cpt].n==0)return true;
+            if(plateau [case_arrive+cpt].n !=1 && plateau [case_arrive+cpt].n !=2 ) break;
+            if(plateau [case_arrive+cpt].n == 1 || plateau [case_arrive+cpt].n == 2)return true;
+          }
+        }
+        else break;
+        cpt+=8;
+      }
+
+      cpt = 7;
+      //On vérifie la diagonale haute droite
+      while(case_arrive-cpt >=0){
+        if(mailbox[tab64[case_arrive-cpt]]!=-1 && mailbox[tab64[case_arrive-cpt]-1]!=-1){
+          if (plateau [case_arrive-cpt].n!=0 && plateau [case_arrive-cpt].c==0) break;
+          if(plateau [case_arrive-cpt].c==1 ) {
+            if(cpt==7)
+              if(plateau [case_arrive-cpt].n==0 || plateau [case_arrive-cpt].n==5)return true;
+            if(plateau [case_arrive-cpt].n !=1 && plateau [case_arrive-cpt].n !=3 ) break;
+            if(plateau [case_arrive-cpt].n == 1 || plateau [case_arrive-cpt].n == 3)return true;
+          }
+        }
+        else break;
+        cpt+=7;
+      }
+      cpt=7;
+      //On vérifie la diagonale basse gauche
+      while(case_arrive+cpt <LIMITE ){
+        if(mailbox[tab64[case_arrive+cpt]]!=-1 && mailbox[tab64[case_arrive+cpt]+1]!=-1){
+          if (plateau [case_arrive+cpt].n!=0 && plateau [case_arrive+cpt].c==0) break;
+          if(plateau [case_arrive+cpt].c==1 ) {
+            if(cpt==7 && plateau [case_arrive+cpt].n==0)return true;
+            if(plateau [case_arrive+cpt].n !=1 && plateau [case_arrive+cpt].n !=3 ) break;
+            if(plateau [case_arrive+cpt].n == 1 || plateau [case_arrive+cpt].n == 3)return true;
+          }
+        }
+        else break;
+        cpt+=7;
+      }
+      cpt=9;
+
+      //On vérifie la diagonale basse droite
+      while(case_arrive+cpt <LIMITE ){
+        if(mailbox[tab64[case_arrive+cpt]]!=-1 && mailbox[tab64[case_arrive+cpt]-1]!=-1){
+          if (plateau [case_arrive+cpt].n!=0 && plateau [case_arrive+cpt].c==0) break;
+          if(plateau [case_arrive+cpt].c==1 ) {
+            if(cpt==9 && plateau [case_arrive+cpt].n==0)return true;
+            if(plateau [case_arrive+cpt].n !=1 && plateau [case_arrive+cpt].n !=3 ) break;
+            if(plateau [case_arrive+cpt].n == 1 || plateau [case_arrive+cpt].n == 3)return true;
+          }
+        }
+        else break;
+        cpt+=9;
+      }
+      cpt=9;
+      //On vérifie la diagonale haute gauche
+      while(case_arrive-cpt >=0 ){
+        if(mailbox[tab64[case_arrive-cpt]]!=-1 && mailbox[tab64[case_arrive-cpt]+1]!=-1){
+          if (plateau [case_arrive-cpt].n!=0 && plateau [case_arrive-cpt].c==0) break;
+          if(plateau [case_arrive-cpt].c==1 ) {
+            if(cpt==9)
+              if(plateau [case_arrive-cpt].n==0 || plateau [case_arrive-cpt].n==5)return true;
+
+            if(plateau [case_arrive-cpt].n !=1 && plateau [case_arrive-cpt].n !=3 ) break;
+            if(plateau [case_arrive-cpt].n == 1 || plateau [case_arrive-cpt].n == 3)return true;
+          }
+        }
+        else break;
+        cpt+=9;
+      }
+
+      cpt=0;
+      //On vérifie si la case n'est pas menacée par un cavalier
+      //On parcour l'plateau  case par case, quand on tombe sur un cavalier on génère ses moves possibles dans le tableau
+      //quand on a les deplacements possibles des deux cavaliers adverses, on vérifie si la case d'arrivée qu'on a choisis correspond à une des cases possibles pour un cavaliers
+      //si c'est le cas on ajout cette case au tableau attacked pour dire que cette case est menacée
+
+      for(int i=0; i<LIMITE; i++){
+        if(cpt==2)break;
+        if (plateau [i].n==4 && plateau [i].c==1){
+          get_moves_cavalier(i,1,testing_cavalier);
+          cpt++;
+        }
+      }
+      if(is_in_array(testing_cavalier,case_arrive)) return true;
+
+      break;
+
+    case 1 :
+      //on vérifie la ligne droite
+      while(case_arrive+cpt < LIMITE ){
+        if(mailbox[tab64[case_arrive+cpt]] !=-1 && mailbox[tab64[case_arrive+cpt]-1] !=-1 ){
+          if (plateau [case_arrive+cpt].n!=0 && plateau [case_arrive+cpt].c==1) break;
+          if(plateau [case_arrive+cpt].c==0 ) {
+            if(cpt==1 && plateau [case_arrive+cpt].n==0)return true;
+            if(plateau [case_arrive+cpt].n !=1 && plateau [case_arrive+cpt].n !=2 ) break;
+            if(plateau [case_arrive+cpt].n == 1 || plateau [case_arrive+cpt].n == 2)return true;
+          }
+        }
+        else break;
+        cpt++;
+      }
+      cpt=1;
+      //on vérifie la ligne gauche
+      while(case_arrive-cpt >=0 ){
+        if(mailbox[tab64[case_arrive-cpt]] !=-1 && mailbox[tab64[case_arrive-cpt]+1] !=-1 ){
+          if (plateau [case_arrive-cpt].n!=0 && plateau [case_arrive-cpt].c==1) break;
+          if(plateau [case_arrive-cpt].c==0 ) {
+            if(cpt==1 && plateau [case_arrive-cpt].n==0)return true;
+            if(plateau [case_arrive-cpt].n !=1 && plateau [case_arrive-cpt].n !=2 ) break;
+            if(plateau [case_arrive-cpt].n == 1 || plateau [case_arrive-cpt].n == 2)return true;
+          }
+        }
+        else break;
+        cpt++;
+      }
+      cpt =8;
+      //on vérifie la ligne du haut
+      while(case_arrive-cpt >= 0 ){
+        if(mailbox[tab64[case_arrive-cpt]] !=-1){
+          if (plateau [case_arrive-cpt].n!=0 && plateau [case_arrive-cpt].c==1) break;
+          if(plateau [case_arrive-cpt].c==0 ) {
+            if(cpt==8 && plateau [case_arrive-cpt].n==0)return true;
+            if(plateau [case_arrive-cpt].n != 1 && plateau [case_arrive-cpt].n != 2 ) break;
+            if(plateau [case_arrive-cpt].n == 1 || plateau [case_arrive-cpt].n == 2)return true;
+          }
+        }
+        else break;
+        cpt+=8;
+      }
+
+      cpt=8;
+
+      //on vérifie la ligne du bas
+      while(case_arrive+cpt < LIMITE ){
+        if(mailbox[tab64[case_arrive+cpt]] !=-1){
+          if (plateau [case_arrive+cpt].n!=0 && plateau [case_arrive+cpt].c==1) break;
+          if(plateau [case_arrive+cpt].c==0 ) {
+            if(cpt==8 && plateau [case_arrive+cpt].n==0)return true;
+            if(plateau [case_arrive+cpt].n !=1  && plateau [case_arrive+cpt].n != 2 ) break;
+            if(plateau [case_arrive+cpt].n == 1 || plateau [case_arrive+cpt].n == 2)return true;
+          }
+        }
+        else break;
+        cpt+=8;
+      }
+
+      cpt = 7;
+      //On vérifie la diagonale haute droite
+      while(case_arrive-cpt >=0){
+        if(mailbox[tab64[case_arrive-cpt]]!=-1 && mailbox[tab64[case_arrive-cpt]-1]!=-1){
+          if (plateau [case_arrive-cpt].n!=0 && plateau [case_arrive-cpt].c==1) break;
+          if(plateau [case_arrive-cpt].c==0 ) {
+            if(cpt==7 && plateau [case_arrive-cpt].n==0)return true;
+            if(plateau [case_arrive-cpt].n !=1  && plateau [case_arrive-cpt].n != 3 ) break;
+            if(plateau [case_arrive-cpt].n == 1 || plateau [case_arrive-cpt].n == 3)return true;
+          }
+        }
+        else break;
+        cpt+=7;
+      }
+      cpt=7;
+      //On vérifie si on a pas de fou ou de dame sur la diagonale basse gauche
+      while(case_arrive+cpt <LIMITE ){
+        if(mailbox[tab64[case_arrive+cpt]]!=-1 && mailbox[tab64[case_arrive+cpt]+1]!=-1){
+          if (plateau [case_arrive+cpt].n!=0 && plateau [case_arrive+cpt].c==1) break;
+          if(plateau [case_arrive+cpt].c==0 ) {
+            if(cpt==7)
+              if(plateau [case_arrive+cpt].n==0 || plateau [case_arrive+cpt].n==5)return true;
+            if(plateau [case_arrive+cpt].n !=1  && plateau [case_arrive+cpt].n != 3 ) break;
+            if(plateau [case_arrive+cpt].n == 1 || plateau [case_arrive+cpt].n == 3)return true;
+          }
+        }
+        else break;
+        cpt+=7;
+      }
+      cpt=9;
+
+      //On vérifie la diagonale basse droite
+      while(case_arrive+cpt <LIMITE ){
+        if(mailbox[tab64[case_arrive+cpt]]!=-1 && mailbox[tab64[case_arrive+cpt]-1]!=-1){
+          if (plateau [case_arrive+cpt].n!=0 && plateau [case_arrive+cpt].c==1) break;
+          if(plateau [case_arrive+cpt].c==0 ) {
+            if(cpt==9)
+              if(plateau [case_arrive+cpt].n==0 || plateau [case_arrive+cpt].n==5)return true;
+            if(plateau [case_arrive+cpt].n != 1 && plateau [case_arrive+cpt].n != 3 ) break;
+            if(plateau [case_arrive+cpt].n == 1 || plateau [case_arrive+cpt].n == 3)return true;
+          }
+        }
+        else break;
+        cpt+=9;
+      }
+      cpt=9;
+      //On vérifie la diagonale haute gauche
+      while(case_arrive-cpt >=0 ){
+        if(mailbox[tab64[case_arrive-cpt]]!=-1 && mailbox[tab64[case_arrive-cpt]+1]!=-1){
+          if (plateau [case_arrive-cpt].n!=0 && plateau [case_arrive-cpt].c==1) break;
+          if(plateau [case_arrive-cpt].c==0 ) {
+            if(cpt==9 && plateau [case_arrive-cpt].n==0)return true;
+            if(plateau [case_arrive-cpt].n !=1  && plateau [case_arrive-cpt].n != 3 ) break;
+            if(plateau [case_arrive-cpt].n == 1 || plateau [case_arrive-cpt].n == 3)return true;
+          }
+        }
+        else break;
+        cpt+=9;
+      }
+      //cases menacées par des cavaliers
+
+      for(int i=0; i<LIMITE; i++){
+        if(cpt==2)break;
+        if (plateau [i].n==4 && plateau [i].c==0){
+          get_moves_cavalier(i,0,testing_cavalier);
+          cpt++;
+        }
+      }
+      if(is_in_array(testing_cavalier,case_arrive)) return true;
+      break;
+  }
+  return false;
+}
+
+//bouger une pièce sur l'échiquier
+bool move_piece(int dep, int arr, Piece plateau[], int moves []){
+  for(int i=0; i<TAILLE; i++){
+    //si on arrive à une valeur -2 ça veut dire qu'on a parcourru les moves possibles et que la case demandée n'y figure pas
+    // donc la case donnée est invalide, on affiche le message d'erreur et on quitte la boucle
+    if(moves[i]==-2){
+      system("clear");
+      banner("../Utiles/banner.txt");
+      wprintf(L"Déplacement impossible ! Entrez une case valide !\n\n");
+      break;
+    }
+    if(arr == moves[i]){
+
+      if(echiquier[arr].n==6 && echiquier[dep].c==0 && echiquier[dep].n==5){
+        if(dep-9==arr || dep-7==arr){
+          echiquier[arr+8]=case_vide;
+        }
+      }
+      if(echiquier[arr].n==6 && echiquier[dep].c==1 && echiquier[dep].n==5){
+        if(dep+9==arr || dep+7==arr){
+          echiquier[arr-8]=case_vide;
+        }
+      }
+
+      plateau [arr]=plateau [dep];
+      plateau [dep]=case_vide;
+      return true;
+    }
+  }
+  return false;
+}
+
+//gérer le jeu à tour de role
+bool gerer_tour(int role, int piece){
+  if (role==0){
+    if(echiquier[piece].c==0) return true;
+    else {
+      system("clear");
+      banner("../Utiles/banner.txt");
+      wprintf(L"C'est aux blancs de jouer !\n");
+      return false;
+    }
+  }
+  if (role==1){
+    if(echiquier[piece].c==1) return true;
+    else {
+      system("clear");
+      banner("../Utiles/banner.txt");
+      wprintf(L"C'est aux noirs de jouer !\n");
+      return false;
+    }
+  }
+}
+
+//sauvegarder une partie
+void save_game(char date [20], char nom[20]){
+  FILE *fp;
+  strcpy(savefile, "Sauvegarde_le_");
+  strcat(savefile, date);
+  strcat(savefile, nom);
+  strcat(savefile, ".txt");
+  fp= fopen(savefile,"w");
+  fprintf(fp,"%i\n",role);
+  for(int i=0; i<LIMITE; i++){
+    fprintf(fp,"%i %i %i\n",i,echiquier[i].n,echiquier[i].c);
+  }
+  fclose(fp);
+}
+
+//charger une partie
+void load_game(char partie [100]){
+/*  FILE *fp;
+  strcpy(savefile,"");
+  strcpy(savefile,"../Utiles/");
+  fp= fopen(strcat(savefile,partie),"r");
+  int pos;
+  int type;
+  int color;
+
+  if (fp != NULL)
+    {
+        fscanf(fp, "%d %d %d", &pos, &type, &color);
+
+
+        fclose(fichier);
+    }*/
+}
+
+//permuter la place entre deux pieces
+void permuter_piece(int piece_une, int piece_deux, Piece plateau []){
+  Piece tmp  = plateau [piece_une];
+  plateau [piece_une]=plateau [piece_deux];
+  plateau [piece_deux]= tmp;
+}
+
+//Le roque
+bool roquer(int position_tour){
+
+  if(echiquier[position_tour].n!=2)
+    wprintf(L"essayez avec une position valide !");
+  else{
+    if(role==0 && !bl_roque){
+      switch(position_tour){
+        case 63 :
+          if(echiquier[62].n==6 && echiquier[61].n==6){
+            if(!is_attacked(get_pos_roi(),0,echiquier) && !is_attacked( position_tour, 0, echiquier) && !is_attacked(62,0,echiquier) && !is_attacked(61,0,echiquier)){
+              if(!echiquier[get_pos_roi()].bouge && !echiquier[position_tour].bouge){
+                echiquier[62]=echiquier[60];
+                echiquier[61]=echiquier[63];
+                echiquier[60]=case_vide;
+                echiquier[63]=case_vide;
+                cpy_plateau(echiquier,test_echiquier);
+                bl_roque = true;
+                return true;
+              }
+              else return false;
+            }
+            else return false;
+          }
+          else return false;
+          break;
+        case 56 :
+          if(echiquier[57].n==6 && echiquier[58].n==6 && echiquier[59].n==6){
+            if(!is_attacked(get_pos_roi(),0,echiquier) && !is_attacked( position_tour, 0, echiquier) && !is_attacked(57,0,echiquier) && !is_attacked(58,0,echiquier) && !is_attacked(59,0,echiquier)){
+              if(!echiquier[get_pos_roi()].bouge && !echiquier[position_tour].bouge){
+                echiquier[58]=echiquier[60];
+                echiquier[59]=echiquier[56];
+                echiquier[56]=case_vide;
+                echiquier[57]=case_vide;
+                echiquier[60]=case_vide;
+                cpy_plateau(echiquier,test_echiquier);
+                bl_roque = true;
+                return true;
+              }
+              else return false;
+            }
+            else return false;
+          }
+          else return false;
+          break;
+      }
+    }
+    if(role==1 && !nr_roque){
+      switch(position_tour){
+        case 7 :
+          if(echiquier[5].n==6 && echiquier[6].n==6){
+            if(!is_attacked(get_pos_roi(),1,echiquier) && !is_attacked( position_tour, 1, echiquier) && !is_attacked(5,1,echiquier) && !is_attacked(6,1,echiquier)){
+              if(!echiquier[get_pos_roi()].bouge && !echiquier[position_tour].bouge){
+                echiquier[6]=echiquier[4];
+                echiquier[5]=echiquier[7];
+                Piece case_vide = {VIDE,NONE,value[0],false};
+                echiquier[4]=case_vide;
+                echiquier[7]=case_vide;
+                cpy_plateau(echiquier,test_echiquier);
+                nr_roque =true;
+                return true;
+              }
+              else return false;
+            }
+            else return false;
+          }
+          else return false;
+          break;
+        case 0 :
+          if(echiquier[1].n==6 && echiquier[2].n==6 && echiquier[3].n==6){
+            if(!is_attacked(get_pos_roi(),1,echiquier) && !is_attacked( position_tour, 1, echiquier) && !is_attacked(1,1,echiquier) && !is_attacked(2,1,echiquier) && !is_attacked(3,1,echiquier)){
+              if(!echiquier[get_pos_roi()].bouge && !echiquier[position_tour].bouge){
+                echiquier[3]=echiquier[2];
+                echiquier[2]=echiquier[4];
+                Piece case_vide = {VIDE,NONE,value[0],false};
+                echiquier[0]=case_vide;
+                echiquier[1]=case_vide;
+                echiquier[4]=case_vide;
+                cpy_plateau(echiquier,test_echiquier);
+                nr_roque =true;
+                return true;
+              }
+              else return false;
+            }
+            else return false;
+          }
+          else return false;
+          break;
+      }
+    }
+  }
+}
+
+//récupérer les indices à partir des cases fournies par l'utilisateur
+void get_indices (){
+  wprintf(L"\n\n Instruction 1 -> ");
+  scanf("%s",case_dep);
+
+  if(strcmp(case_dep,"exit")==0) exit(0);
+  if(strcmp(case_dep,"save")==0){
+    wprintf(L"\n\n Vous avez choisis de sauvegarder et quitter la partie ! ");
+    wprintf(L"\n\n Entrez votre nom (Ex: Martin) -> ");
+    scanf("%s",nom_save);
+    wprintf(L"\n\n Entrez la date du jour (Ex: 25-03-2021) ->");
+    scanf("%s",date_save);
+
+    save_game(date_save,nom_save);
+    wprintf(L"\n\n Votre partie a bien été enregistrée ! A la prochaine !");
+
+    exit(0);
+  }
+  if(strcmp(case_dep,"roque")==0){
+    wprintf(L"\nEntrez la case de la tour à roquer ->  ");
+    scanf("%s",tour_to_roque);
+    for(int i=0; i<LIMITE; i++){
+      if(strcmp(tour_to_roque, coord[i])==0){
+        pos_tour_to_roque = i;
+      }
+    }
+  }
+  else{
+    wprintf(L"\nInstruction 2 ->  ");
+    scanf("%s",case_arr);
+
+    //if(strcmp(case_dep,"save")==0)save_game();
+    for(int i=0; i<LIMITE; i++){
+      if(strcmp(case_dep, coord[i])==0){
+        indice_dep = i;
+      }
+      if(strcmp(case_arr,coord[i])==0){
+        indice_arr = i;
+        strcpy(tmp_last_move, case_arr);
+      }
+
+    }
+  }
+}
+
+//switch les roles
+void switch_role (){
+  if(role==0)role=1;
+  else role=0;
+}
+
+//appeller la bonne fonction d'affichage en fonction du role
+void afficher(){
+  if(role==0) affiche_plateau();
+  else affiche_plateau_mirroir();
+}
+
+//détecter si le camp qui a le tour est en echec on renvoie true si on est en echec, sinon false
+bool detect_echec( Piece plateau[] ){
+  if (role == 0 ){
+    if(is_attacked(get_pos_roi(),0,plateau)){
+      return true;
+    }
+    else return false;
+  }
+  else{
+    if(is_attacked(get_pos_roi(),1,plateau)){
+      return true;
+    }
+    else return false;
+  }
+}
+
+//tester si un deplacement met le roi en echec ou pas, pour savoir si il est permis
+bool test_echec_after_move(int depart, int arrive, int moves []){
+  if (move_piece(depart,arrive,test_echiquier, moves)){
+    if (detect_echec(test_echiquier))
+      return true;
+    else
+      return false;
+  }
+  else return false;
+}
+
+//gère le deplacement de la pièce sélectionnée
+bool deplacement_piece(int indice_dep, int indice_arr){
+  init_array(possible_moves,TAILLE);
+  switch (echiquier[indice_dep].n) {
+    case 0 :
+      if(echiquier[indice_dep].c==0){
+        if(!is_attacked(indice_arr,0,echiquier)){
+          init_array(possible_moves,TAILLE);
+          get_moves_roi(indice_dep,echiquier[indice_dep].c,possible_moves);
+          if(move_piece(indice_dep,indice_arr,echiquier,possible_moves)){
+            cpy_plateau(echiquier,test_echiquier);
+            echiquier[indice_arr].bouge=true;
+           return true;
+          }
+          else return false;
+
+        }
+        else {
+          system("clear");
+          banner("../Utiles/banner.txt");
+          wprintf(L"Cette case est menacée! déplacement impossible !\n\n");
+          return false;
+        }
+      }
+      else{
+        if(!is_attacked(indice_arr,1,echiquier)){
+          get_moves_roi(indice_dep,echiquier[indice_dep].c,possible_moves);
+          if(move_piece(indice_dep,indice_arr,echiquier,possible_moves)) {
+            cpy_plateau(echiquier,test_echiquier);
+            return true;
+          }
+          else return false;
+        }
+        else{
+          system("clear");
+          banner("../Utiles/banner.txt");
+          wprintf(L"Cette case est menacée! déplacement impossible !\n\n");
+          return false;
+        }
+      }
+      break;
+
+    case 1 :
+      get_moves_dame(indice_dep,echiquier[indice_dep].c,possible_moves);
+      if(test_echec_after_move(indice_dep,indice_arr,possible_moves)) {
+        system("clear");
+        banner("../Utiles/banner.txt");
+        wprintf(L"Le roi est en echec, ce deplacement est impossible !\n\n");
+        cpy_plateau(echiquier,test_echiquier);
+        return false;
+      }
+      else{
+        if(move_piece(indice_dep,indice_arr,echiquier,possible_moves)){
+          cpy_plateau(echiquier,test_echiquier);
+          return true;
+        }
+        else return false;
+      }
+      break;
+    case 2 :
+      get_moves_tour(indice_dep,echiquier[indice_dep].c,possible_moves);
+      if(test_echec_after_move(indice_dep,indice_arr,possible_moves)) {
+        system("clear");
+        banner("../Utiles/banner.txt");
+        wprintf(L"Le roi est en echec, ce deplacement est impossible !\n\n");
+        cpy_plateau(echiquier,test_echiquier);
+        return false;
+      }
+      else{
+        if(move_piece(indice_dep,indice_arr,echiquier,possible_moves)){
+          cpy_plateau(echiquier,test_echiquier);
+          echiquier[indice_arr].bouge=true;
+          return true;
+        }
+        else return false;
+      }
+      break;
+    case 3 :
+      init_array(possible_moves,TAILLE);
+      get_moves_fou(indice_dep,echiquier[indice_dep].c,possible_moves);
+
+      if(test_echec_after_move(indice_dep,indice_arr,possible_moves)) {
+        system("clear");
+        banner("../Utiles/banner.txt");
+        wprintf(L"Le roi est en echec, ce deplacement est impossible !\n\n");
+        cpy_plateau(echiquier,test_echiquier);
+        return false;
+      }
+      else{
+        if(move_piece(indice_dep,indice_arr,echiquier,possible_moves)){
+          cpy_plateau(echiquier,test_echiquier);
+          return true;
+        }
+        else return false;
+      }
+      break;
+    case 4 :
+      get_moves_cavalier(indice_dep,echiquier[indice_dep].c,possible_moves);
+      if(test_echec_after_move(indice_dep,indice_arr,possible_moves)) {
+        system("clear");
+        banner("../Utiles/banner.txt");
+        wprintf(L"Le roi est en echec, ce deplacement est impossible !\n\n");
+        cpy_plateau(echiquier,test_echiquier);
+        return false;
+      }
+      else{
+        if(move_piece(indice_dep,indice_arr,echiquier,possible_moves)){
+          cpy_plateau(echiquier,test_echiquier);
+          return true;
+        }
+        else return false;
+      }
+      break;
+    case 5 :
+      get_moves_pion(indice_dep,echiquier[indice_dep].c,possible_moves);
+      if(test_echec_after_move(indice_dep,indice_arr,possible_moves)) {
+        cpy_plateau(echiquier,test_echiquier);
+        system("clear");
+        banner("../Utiles/banner.txt");
+        wprintf(L"Le roi est en echec, ce deplacement est impossible !\n\n");
+        return false;
+      }
+      else{
+        if(move_piece(indice_dep,indice_arr,echiquier,possible_moves)){
+          cpy_plateau(echiquier,test_echiquier);
+          first_pos = indice_dep;
+          new_pos = indice_arr;
+          if(indice_arr<8 && indice_arr>=0){
+            int choix =0;
+            wprintf(L"Le pion est promu ! Tapez le numéro de votre choix : 1_ Dame || 2_ Tour || 3_fou || 4_Cavalier : ");
+            scanf("%i",&choix);
+            if(choix==1 && role==0) echiquier[indice_arr] = b_dame;
+            if(choix==2 && role==0) echiquier[indice_arr] = b_tour;
+            if(choix==3 && role==0) echiquier[indice_arr] = b_fou;
+            if(choix==4 && role==0) echiquier[indice_arr] = b_cavalier;
+          }
+          if(indice_arr<64 && indice_arr>55){
+            int choix =0;
+            wprintf(L"Le pion est promu ! Tapez le numéro de votre choix : 1_ Dame || 2_ Tour || 3_fou || 4_Cavalier : ");
+            scanf("%i",&choix);
+            if(choix==1 && role==1) echiquier[indice_arr] = n_dame;
+            if(choix==2 && role==1) echiquier[indice_arr] = n_tour;
+            if(choix==3 && role==1) echiquier[indice_arr] = n_fou;
+            if(choix==4 && role==1) echiquier[indice_arr] = n_cavalier;
+          }
+
+          cpy_plateau(echiquier,test_echiquier);
+          return true;
+        }
+        else return false;
+      }
+      break;
+  }
+}
 
 //echec et mat : fin du jeu
 bool game_over (){
@@ -1523,78 +1686,85 @@ bool game_over (){
       if(deplacement_echec[i]==-2)break;
       if(!is_attacked(deplacement_echec[i],role, echiquier)) return false;
     }
-    
-    //on cherche les pieces du joueur actuel
-  /*  for(int i=0; i<LIMITE; i++){
-      if (can_save) break;
-      if(echiquier[i].c==role){
-        switch(echiquier[i].n){
-          case 0 :
-            break;
-          case 1 :
-            pos =i;
-            init_array(deplacement_echec,LIMITE);
-            get_moves_dame(pos,role,deplacement_echec);
-            for(int j=0; j<LIMITE;j++){
-             if (deplacement_echec[j]==-2) break;
-             if(!test_echec_after_move(pos,deplacement_echec[j])){
-               cpy_plateau(echiquier,test_echiquier);
-               return false;
-             }
-            }
-            break;
-          case 2 :
-           pos = i;
-           init_array(deplacement_echec,LIMITE);
-           get_moves_tour(pos,role,deplacement_echec);
-           for(int j=0; j<LIMITE; j++){
-             if (deplacement_echec[j]==-2) break;
-             if(!test_echec_after_move(pos,deplacement_echec[j])){
-               cpy_plateau(echiquier,test_echiquier);
-               return false;
-             }
-           }
-           break;
-           /**
-          case 3 :
-            pos = i;
-            init_array(deplacement_echec,LIMITE);
-            get_moves_fou(pos,role,deplacement_echec);
-            for(int j=0; j<LIMITE; j++){
-              if (deplacement_echec[j]==-2) break;
-              if(!test_echec_after_move(pos,deplacement_echec[j])){
-                cpy_plateau(echiquier,test_echiquier);
-                return false;
-              }
-            }
-            break;
-          case 4 :
-            pos = i;
-            init_array(deplacement_echec,LIMITE);
-            get_moves_cavalier(pos,role,deplacement_echec);
-            for(int j=0; j<LIMITE; j++){
-              if (deplacement_echec[j]==-2) break;
-              if(!test_echec_after_move(pos,deplacement_echec[j])){
-                cpy_plateau(echiquier,test_echiquier);
-                return false;
-              }
-            }
-            break;
-        /*  case 5 :
-            pos = i;
-            init_array(deplacement_echec,LIMITE);
-            get_moves_pion(pos,role,deplacement_echec);
-            for(int j=0; j<LIMITE; j++){
-              if (deplacement_echec[j]==-2) break;
-              if(!test_echec_after_move(pos,deplacement_echec[j])){
-                cpy_plateau(echiquier,test_echiquier);
-                return false;
-              }
-            }
-            break;
+
+    pos=get_pos_dame();
+    if (get_pos_dame() != -2){
+      init_array(deplacement_echec,LIMITE);
+      get_moves_dame(pos,role,deplacement_echec);
+      for(int i=0; i<LIMITE; i++){
+        if(deplacement_echec[i]==-2)break;
+        if(!test_echec_after_move(pos,deplacement_echec[i],deplacement_echec)){
+          cpy_plateau(echiquier,test_echiquier);
+          return false;
+        }
+        cpy_plateau(echiquier,test_echiquier);
+      }
+    }
+    get_pos_tours();
+    for(int j=0; j<2; j++){
+      if (pos_tours[j] != -2){
+        pos=pos_tours[j];
+        init_array(deplacement_echec,LIMITE);
+        get_moves_tour(pos,role,deplacement_echec);
+        for(int i=0; i<LIMITE; i++){
+          if(deplacement_echec[i]==-2)break;
+          if(!test_echec_after_move(pos,deplacement_echec[i],deplacement_echec)){
+            cpy_plateau(echiquier,test_echiquier);
+            return false;
+          }
+          cpy_plateau(echiquier,test_echiquier);
         }
       }
-    }*/
+    }
+    get_pos_fous();
+    for(int j=0; j<2; j++){
+      if (pos_fous[j] != -2){
+        pos=pos_fous[j];
+        init_array(deplacement_echec,LIMITE);
+        get_moves_fou(pos,role,deplacement_echec);
+        for(int i=0; i<LIMITE; i++){
+          if(deplacement_echec[i]==-2)break;
+          if(!test_echec_after_move(pos,deplacement_echec[i],deplacement_echec)){
+            cpy_plateau(echiquier,test_echiquier);
+            return false;
+          }
+          cpy_plateau(echiquier,test_echiquier);
+        }
+      }
+    }
+    get_pos_cavaliers();
+    for(int j=0; j<2; j++){
+      if (pos_cavaliers[j] != -2){
+        pos=pos_cavaliers[j];
+        init_array(deplacement_echec,LIMITE);
+        get_moves_cavalier(pos,role,deplacement_echec);
+
+        for(int i=0; i<LIMITE; i++){
+          if(deplacement_echec[i]==-2)break;
+          if(!test_echec_after_move(pos,deplacement_echec[i],deplacement_echec)){
+            cpy_plateau(echiquier,test_echiquier);
+            return false;
+          }
+          cpy_plateau(echiquier,test_echiquier);
+        }
+      }
+    }
+    get_pos_pions();
+    for(int j=0; j<8; j++){
+      if (pos_pions[j] != -2){
+        pos=pos_pions[j];
+        init_array(deplacement_echec,LIMITE);
+        get_moves_pion(pos,role,deplacement_echec);
+        for(int i=0; i<LIMITE; i++){
+          if(deplacement_echec[i]==-2)break;
+          if(!test_echec_after_move(pos,deplacement_echec[i],deplacement_echec)){
+            cpy_plateau(echiquier,test_echiquier);
+            return false;
+          }
+          cpy_plateau(echiquier,test_echiquier);
+        }
+      }
+    }
     //si on arrive à ce stade c'est que rien ne peut esquiver l'echec et donc c'est un echec et mat
     return true;
   }
@@ -1611,20 +1781,42 @@ void start_game(){
     banner("../Utiles/banner.txt");
     afficher();
     get_indices();
-
-    //on s'assure que c'est le bon joueur qui joue et que le deplacement est valide
-    while(!gerer_tour(role,indice_dep) || !deplacement_piece(indice_dep,indice_arr)){
-      afficher();
-      get_indices();
+    if(strcmp(case_dep,"roque")==0){
+      if(!roquer(pos_tour_to_roque)){
+        wprintf(L"Roque impossible, conditions insatisfaites!");
+      }
+      else{
+        if(role==0) white_pl= true;
+        else black_pl = true;
+      }
+    }
+    else{
+      //on s'assure que c'est le bon joueur qui joue et que le deplacement est valide
+      while(!gerer_tour(role,indice_dep) || !deplacement_piece(indice_dep,indice_arr)){
+        afficher();
+        get_indices();
+      }
+      if(role==0){
+        white_pl= true;
+        strcpy(bl_last_move, tmp_last_move);
+      }
+      else{
+        black_pl = true;
+        strcpy(nr_last_move, tmp_last_move);
+      }
     }
     system("clear");
-    switch_role();
-    if(game_over()) break;
+    if(black_pl==true || white_pl==true){
+      black_pl =false;
+      white_pl =false;
+      switch_role();
+    }
   }
-  wprintf(L"La partie est terminée ! les ");
-  if(role==0) wprintf(L"Les Noirs ont gagné !");
-  else wprintf(L"Les Blancs ont gagné !");
-
+  system("clear");
+  afficher ();
+  if(role==1)banner("../Utiles/blanc.txt");
+  else banner("../Utiles/noir.txt");
+  exit(0);
 }
 
 void menu (){
@@ -1647,7 +1839,9 @@ void menu (){
         start_game();
         break;
     case 'b':
-        //charger_partie();
+        wprintf(L"entrez le nom du fichier de votre sauvegarde");
+        scanf("%s",load);
+        load_game(load);
         break;
     case'c':
         //show_saved_games();
@@ -1669,6 +1863,5 @@ void menu (){
 int main (){
 setlocale(LC_CTYPE, "");
 menu();
-
 return 0;
 }

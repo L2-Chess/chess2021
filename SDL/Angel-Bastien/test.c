@@ -1,9 +1,9 @@
-// Inclure la bibliothèque SDL
+// Inclure la bibliothï¿½que SDL
 #include <SDL.h>
 #include <SDL_image.h>
 
 
-// Inclusion des bibliothèque standard C
+// Inclusion des bibliothï¿½que standard C
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -132,7 +132,7 @@ int main(int argc, char* argv[])
                     SDL_Log("LE BOUTON GAUCHE EST CLIQUE");
                 }
                 else if (IsInSquare == 1 && mouse_left == 1) {
-                    SDL_Log("COUELUR ROUGE");
+                    SDL_Log("COULEUR ROUGE");
                     if (Action1 == 0) {
                         Action1 = 1;
                     }
@@ -168,8 +168,8 @@ int main(int argc, char* argv[])
                 }else  {
                     mouse_left = 0;
                 }
-                
-            
+
+
             /*case SDL_MOUSEWHEEL:
 
                 if (events.wheel.y > 0) // scroll up
@@ -213,7 +213,7 @@ int main(int argc, char* argv[])
         //SDL_RenderDrawPoint(pRenderer, 200, 200);
 
         SDL_RenderCopy(pRenderer, pTexture, NULL, NULL);
-        
+
         //rectangle couleur
         SDL_SetRenderDrawColor(pRenderer, 0, 255, 0, 0);
 
@@ -234,7 +234,7 @@ int main(int argc, char* argv[])
 
         SDL_RenderPresent(pRenderer);
 
-        
+
 
 
         SDL_Delay(20);

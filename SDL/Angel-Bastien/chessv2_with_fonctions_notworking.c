@@ -1,11 +1,11 @@
 /**
  * \file chess.c
  * \brief Programme du jeu SDL.
- * \author Angel/Bastien
+ * \author Angel/Bastien (conseils/aides : Ayoub)
  * \version 1.00
  * \date 19.04.21
  *
- * Programme en SDL d'échecs
+ * Programme en SDL du jeu d'échecs
  *
  */
 

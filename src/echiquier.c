@@ -1,3 +1,20 @@
+/**
+ * \file echiquier.c
+ * \brief Jeu échecs Algo.
+ * \author Ayoub (conseils/aides : Bastien/Angel)
+ * \version 1.00
+ * \date 21.04.21
+ *
+ * Jeu échecs Algo.
+ *
+ */
+
+
+
+
+
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "../lib/pieces.h"

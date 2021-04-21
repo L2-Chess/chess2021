@@ -9,7 +9,7 @@
  *
  */
 
-
+// gcc Angel-Bastien/chess.c -o bin/prog -I include -L ./lib -l mingw32 -lSDL2main -lSDL2 -lSDL2_image -lSDL2_ttf
 
 
 
@@ -45,8 +45,12 @@ int prise_h;
 int IsInSquare = 0;
 
 //INIT DE TOUTES LES CASES
-
 char CASE[2];
+
+char CASE_ARRIVEE[2];
+
+char CASE_DEPART[2];
+
 
 /* SDL_Window* pWindow=NULL;
 SDL_Renderer* pRenderer= NULL;
@@ -1025,7 +1029,7 @@ int main(int argc, char* argv[])
                 }
 
 
-                SDL_Log("Mouse x = %i , Mouse y = %i , IIS1 = %i , CASE = %s, GRAB = %i , PIECE_DROP = %i", mouse_x, mouse_y, IsInSquare, CASE, GrabMode, PieceDrop);
+                  SDL_Log("Mouse x = %i , Mouse y = %i , IIS1 = %i , CASE = %s,CASE de depart = %s, CASE arrivee = %s, GRAB = %i , PIECE_DROP = %i", mouse_x, mouse_y, IsInSquare, CASE,CASE_DEPART, CASE_ARRIVEE, GrabMode, PieceDrop);
 
 
 
@@ -1051,13 +1055,26 @@ int main(int argc, char* argv[])
 
                }
 
+               CASE_DEPART[0] = 'R' ;
+               CASE_DEPART[1] = 'R' ;
+
+
+               if (GrabMode == 1) {
+                   CASE_DEPART[0] = CASE[0];
+                   CASE_DEPART[1] = CASE[1];
+               }
+
                //VALEURE SAVOIR CASE DE DEPART
+
+
 
 
 
                break;
 
             case SDL_MOUSEBUTTONUP:
+            CASE_ARRIVEE[0] = 'Z' ;
+            CASE_ARRIVEE[1] = 'Z' ;
 
                 if (GrabMode == 1) {
                     switch (CASE[0])
@@ -1066,34 +1083,50 @@ int main(int argc, char* argv[])
                         switch (CASE[1])
                         {
                         case '1':
+                            CASE_ARRIVEE[0] = CASE[0];
+                            CASE_ARRIVEE[1] = CASE[1];
                             square.x = a1.x + (a1.w / RECAD);
                             square.y = a1.y + (a1.h / RECAD);
                             break;
                         case '2':
+                            CASE_ARRIVEE[0] = CASE[0];
+                            CASE_ARRIVEE[1] = CASE[1];
                             square.x = a2.x + (a2.w / RECAD);
                             square.y = a2.y + (a2.h / RECAD);
                             break;
                         case '3':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = a3.x + (a3.w / RECAD);
                             square.y = a3.y + (a3.h / RECAD);
                             break;
                         case '4':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = a4.x + (a4.w / RECAD);
                             square.y = a4.y + (a4.h / RECAD);
                             break;
                         case '5':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = a5.x + (a5.w / RECAD);
                             square.y = a5.y + (a5.h / RECAD);
                             break;
                         case '6':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = a6.x + (a6.w / RECAD);
                             square.y = a6.y + (a6.h / RECAD);
                             break;
                         case '7':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = a7.x + (a7.w / RECAD);
                             square.y = a7.y + (a7.h / RECAD);
                             break;
                         case '8':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = a8.x + (a8.w / RECAD);
                             square.y = a8.y + (a8.h / RECAD);
                             break;
@@ -1103,34 +1136,50 @@ int main(int argc, char* argv[])
                         switch (CASE[1])
                         {
                         case '1':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = b1.x + (b1.w / RECAD);
                             square.y = b1.y + (b1.h / RECAD);
                             break;
                         case '2':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = b2.x + (b2.w / RECAD);
                             square.y = b2.y + (b2.h / RECAD);
                             break;
                         case '3':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = b3.x + (b3.w / RECAD);
                             square.y = b3.y + (b3.h / RECAD);
                             break;
                         case '4':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = b4.x + (b4.w / RECAD);
                             square.y = b4.y + (b4.h / RECAD);
                             break;
                         case '5':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = b5.x + (b5.w / RECAD);
                             square.y = b5.y + (b5.h / RECAD);
                             break;
                         case '6':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = b6.x + (b6.w / RECAD);
                             square.y = b6.y + (b6.h / RECAD);
                             break;
                         case '7':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = b7.x + (b7.w / RECAD);
                             square.y = b7.y + (b7.h / RECAD);
                             break;
                         case '8':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = b8.x + (b8.w / RECAD);
                             square.y = b8.y + (b8.h / RECAD);
                             break;
@@ -1140,34 +1189,50 @@ int main(int argc, char* argv[])
                         switch (CASE[1])
                         {
                         case '1':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = c1.x + (c1.w / RECAD);
                             square.y = c1.y + (c1.h / RECAD);
                             break;
                         case '2':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = c2.x + (c2.w / RECAD);
                             square.y = c2.y + (c2.h / RECAD);
                             break;
                         case '3':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = c3.x + (c3.w / RECAD);
                             square.y = c3.y + (c3.h / RECAD);
                             break;
                         case '4':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = c4.x + (c4.w / RECAD);
                             square.y = c4.y + (c4.h / RECAD);
                             break;
                         case '5':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = c5.x + (c5.w / RECAD);
                             square.y = c5.y + (c5.h / RECAD);
                             break;
                         case '6':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = c6.x + (c6.w / RECAD);
                             square.y = c6.y + (c6.h / RECAD);
                             break;
                         case '7':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = c7.x + (c7.w / RECAD);
                             square.y = c7.y + (c7.h / RECAD);
                             break;
                         case '8':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = c8.x + (c8.w / RECAD);
                             square.y = c8.y + (c8.h / RECAD);
                             break;
@@ -1177,34 +1242,50 @@ int main(int argc, char* argv[])
                         switch (CASE[1])
                         {
                         case '1':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = d1.x + (d1.w / RECAD);
                             square.y = d1.y + (d1.h / RECAD);
                             break;
                         case '2':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = d2.x + (d2.w / RECAD);
                             square.y = d2.y + (d2.h / RECAD);
                             break;
                         case '3':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = d3.x + (d3.w / RECAD);
                             square.y = d3.y + (d3.h / RECAD);
                             break;
                         case '4':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = d4.x + (d4.w / RECAD);
                             square.y = d4.y + (d4.h / RECAD);
                             break;
                         case '5':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = d5.x + (d5.w / RECAD);
                             square.y = d5.y + (d5.h / RECAD);
                             break;
                         case '6':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = d6.x + (d6.w / RECAD);
                             square.y = d6.y + (d6.h / RECAD);
                             break;
                         case '7':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = d7.x + (d7.w / RECAD);
                             square.y = d7.y + (d7.h / RECAD);
                             break;
                         case '8':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = d8.x + (d8.w / RECAD);
                             square.y = d8.y + (d8.h / RECAD);
                             break;
@@ -1214,34 +1295,50 @@ int main(int argc, char* argv[])
                         switch (CASE[1])
                         {
                         case '1':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = e1.x + (e1.w / RECAD);
                             square.y = e1.y + (e1.h / RECAD);
                             break;
                         case '2':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = e2.x + (e2.w / RECAD);
                             square.y = e2.y + (e2.h / RECAD);
                             break;
                         case '3':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = e3.x + (e3.w / RECAD);
                             square.y = e3.y + (e3.h / RECAD);
                             break;
                         case '4':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = e4.x + (e4.w / RECAD);
                             square.y = e4.y + (e4.h / RECAD);
                             break;
                         case '5':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = e5.x + (e5.w / RECAD);
                             square.y = e5.y + (e5.h / RECAD);
                             break;
                         case '6':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = e6.x + (e6.w / RECAD);
                             square.y = e6.y + (e6.h / RECAD);
                             break;
                         case '7':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = e7.x + (e7.w / RECAD);
                             square.y = e7.y + (e7.h / RECAD);
                             break;
                         case '8':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = e8.x + (e8.w / RECAD);
                             square.y = e8.y + (e8.h / RECAD);
                             break;
@@ -1251,34 +1348,50 @@ int main(int argc, char* argv[])
                         switch (CASE[1])
                         {
                         case '1':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = f1.x + (f1.w / RECAD);
                             square.y = f1.y + (f1.h / RECAD);
                             break;
                         case '2':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = f2.x + (f2.w / RECAD);
                             square.y = f2.y + (f2.h / RECAD);
                             break;
                         case '3':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = f3.x + (f3.w / RECAD);
                             square.y = f3.y + (f3.h / RECAD);
                             break;
                         case '4':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = f4.x + (f4.w / RECAD);
                             square.y = f4.y + (f4.h / RECAD);
                             break;
                         case '5':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = f5.x + (f5.w / RECAD);
                             square.y = f5.y + (f5.h / RECAD);
                             break;
                         case '6':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = f6.x + (f6.w / RECAD);
                             square.y = f6.y + (f6.h / RECAD);
                             break;
                         case '7':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = f7.x + (f7.w / RECAD);
                             square.y = f7.y + (f7.h / RECAD);
                             break;
                         case '8':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = f8.x + (f8.w / RECAD);
                             square.y = f8.y + (f8.h / RECAD);
                             break;
@@ -1288,34 +1401,50 @@ int main(int argc, char* argv[])
                         switch (CASE[1])
                         {
                         case '1':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = g1.x + (g1.w / RECAD);
                             square.y = g1.y + (g1.h / RECAD);
                             break;
                         case '2':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = g2.x + (g2.w / RECAD);
                             square.y = g2.y + (g2.h / RECAD);
                             break;
                         case '3':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = g3.x + (g3.w / RECAD);
                             square.y = g3.y + (g3.h / RECAD);
                             break;
                         case '4':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = g4.x + (g4.w / RECAD);
                             square.y = g4.y + (g4.h / RECAD);
                             break;
                         case '5':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = g5.x + (g5.w / RECAD);
                             square.y = g5.y + (g5.h / RECAD);
                             break;
                         case '6':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = g6.x + (g6.w / RECAD);
                             square.y = g6.y + (g6.h / RECAD);
                             break;
                         case '7':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = g7.x + (g7.w / RECAD);
                             square.y = g7.y + (g7.h / RECAD);
                             break;
                         case '8':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = g8.x + (g8.w / RECAD);
                             square.y = g8.y + (g8.h / RECAD);
                             break;
@@ -1325,34 +1454,50 @@ int main(int argc, char* argv[])
                         switch (CASE[1])
                         {
                         case '1':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = h1.x + (h1.w / RECAD);
                             square.y = h1.y + (h1.h / RECAD);
                             break;
                         case '2':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = h2.x + (h2.w / RECAD);
                             square.y = h2.y + (h2.h / RECAD);
                             break;
                         case '3':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = h3.x + (h3.w / RECAD);
                             square.y = h3.y + (h3.h / RECAD);
                             break;
                         case '4':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = h4.x + (h4.w / RECAD);
                             square.y = h4.y + (h4.h / RECAD);
                             break;
                         case '5':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = h5.x + (h5.w / RECAD);
                             square.y = h5.y + (h5.h / RECAD);
                             break;
                         case '6':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = h6.x + (h6.w / RECAD);
                             square.y = h6.y + (h6.h / RECAD);
                             break;
                         case '7':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = h7.x + (h7.w / RECAD);
                             square.y = h7.y + (h7.h / RECAD);
                             break;
                         case '8':
+                        CASE_ARRIVEE[0] = CASE[0];
+                        CASE_ARRIVEE[1] = CASE[1];
                             square.x = h8.x + (h8.w / RECAD);
                             square.y = h8.y + (h8.h / RECAD);
                             break;

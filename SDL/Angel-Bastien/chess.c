@@ -1029,7 +1029,7 @@ int main(int argc, char* argv[])
                 }
 
 
-                  SDL_Log("Mouse x = %i , Mouse y = %i , IIS1 = %i , CASE = %s,CASE de depart = %s, CASE arrivee = %s, GRAB = %i , PIECE_DROP = %i", mouse_x, mouse_y, IsInSquare, CASE,CASE_DEPART, CASE_ARRIVEE, GrabMode, PieceDrop);
+                SDL_Log("Mouse x = %i , Mouse y = %i , IIS1 = %i , CASE = %c%c,CASE de depart = %c%c, CASE arrivee = %c%c, GRAB = %i , PIECE_DROP = %i", mouse_x, mouse_y, IsInSquare, CASE[0],CASE[1], CASE_DEPART[0],CASE_DEPART[1], CASE_ARRIVEE[0],CASE_ARRIVEE[1], GrabMode, PieceDrop);
 
 
 
